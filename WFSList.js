@@ -7,9 +7,12 @@ import {
   TouchableNativeFeedback,
   View,
 } from 'react-native';
-import { blue, orange, gray, darkGray } from './styles';
+import { blue, orange, gray, darkGray, green } from './styles';
 
 const WFSCell = props => {
+  const submissionCount = props.wfs.layers.reduce((prev, layer) => {
+    return layer.submissions.length;
+  }, 0);
   return (
     <View>
       <TouchableOpacity onPress={props.onSelect}>
@@ -17,7 +20,9 @@ const WFSCell = props => {
           <Text style={styles.cellName} numberOfLines={2}>
             {props.wfs.url}
           </Text>
-          <Text style={styles.cellSubtitle}>Layers: {props.wfs.layers.length}</Text>
+          <Text style={styles.cellSubtitle}>
+            Layers: {props.wfs.layers.length} Submissions: {submissionCount}
+          </Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -32,11 +37,14 @@ export default class WFSList extends Component {
     const { wfs } = this.props;
     return (
       <View style={{ flex: 1 }}>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Your WFS Servers</Text>
+        </View>
         <FlatList
           data={wfs}
           renderItem={({ item }) => (
-            <FormCell
-              layer={item}
+            <WFSCell
+              wfs={item}
               onSelect={() => {
                 navigate('LayerList', { wfs: item });
               }}
@@ -51,12 +59,18 @@ export default class WFSList extends Component {
 }
 
 const styles = StyleSheet.create({
-  wfs: {
-    padding: 8,
+  titleContainer: {
+    paddingLeft: 16,
+    paddingRight: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '800',
   },
   list: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   cellName: {
     fontSize: 16,
@@ -70,6 +84,7 @@ const styles = StyleSheet.create({
   cellRow: {
     paddingTop: 8,
     paddingBottom: 8,
+    paddingRight: 16,
     alignItems: 'flex-start',
     justifyContent: 'center',
     flexDirection: 'column',

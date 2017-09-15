@@ -1,8 +1,8 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import scformschema from 'spatialconnect-form-schema/native';
-import * as wfs from './wfs';
 import * as db from './db';
+import { gray, darkGray } from './styles';
 
 let self;
 class Form extends React.Component {
@@ -56,7 +56,7 @@ class Form extends React.Component {
     const { SCForm } = scformschema;
     const { submitting } = this.state;
     return (
-      <View style={{ flex: 1 }}>
+      <View style={styles.container}>
         {this.state.geometry && (
           <View style={styles.location}>
             <Text>
@@ -79,12 +79,19 @@ class Form extends React.Component {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
   submitBtnStyle: {
     paddingRight: 16,
     color: 'white',
   },
   location: {
     padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: darkGray,
+    backgroundColor: gray,
   },
 });
 

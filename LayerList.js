@@ -38,18 +38,18 @@ export default class LayerList extends Component {
 
   state = { submissions: {} };
 
-  keyExtractor = item => item.layer_key;
+  keyExtractor = item => item.id;
 
   render() {
     const { navigate } = this.props.navigation;
-    const { wfs, layers, submissionCounts } = this.props;
+    const { wfs } = this.props.navigation.state.params;
     return (
-      <View style={{ flex: 1 }}>
+      <View style={styles.container}>
         <View style={styles.wfs}>
           <Text>{wfs.url}</Text>
         </View>
         <FlatList
-          data={layers}
+          data={wfs.layers}
           extraData={this.state}
           renderItem={({ item }) => (
             <FormCell
@@ -68,12 +68,18 @@ export default class LayerList extends Component {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
   wfs: {
     padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: darkGray,
+    backgroundColor: gray,
   },
   list: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   cellName: {
     fontSize: 16,

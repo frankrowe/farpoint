@@ -15,7 +15,9 @@ const WFSSchema = {
 
 const LayerSchema = {
   name: 'Layer',
+  primaryKey: 'id',
   properties: {
+    id: 'string',
     layer_key: 'string',
     schema: 'string',
     submissions: { type: 'list', objectType: 'Submission' },
