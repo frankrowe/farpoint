@@ -1,0 +1,1429 @@
+{
+  "xsd:schema": {
+    "$": {
+      "xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
+      "xmlns:geonode": "http://geonode",
+      "xmlns:gml": "http://www.opengis.net/gml/3.2",
+      "xmlns:wfs": "http://www.opengis.net/wfs/2.0",
+      "elementFormDefault": "qualified",
+      "targetNamespace": "http://geonode"
+    },
+    "xsd:import": [
+      {
+        "$": {
+          "namespace": "http://www.opengis.net/gml/3.2",
+          "schemaLocation":
+            "https://dev.exchange.boundlessps.com/geoserver/schemas/gml/3.2.1/gml.xsd"
+        }
+      }
+    ],
+    "xsd:complexType": [
+      {
+        "$": {
+          "name": "UNAMID_COGI_Operations_AType"
+        },
+        "xsd:complexContent": [
+          {
+            "xsd:extension": [
+              {
+                "$": {
+                  "base": "gml:AbstractFeatureType"
+                },
+                "xsd:sequence": [
+                  {
+                    "xsd:element": [
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "the_geom",
+                          "nillable": "true",
+                          "type": "gml:MultiSurfacePropertyType"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Country_Co",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Mission_Co",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Name",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "NameLong",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Label",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Active",
+                          "nillable": "true",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Active_Fro",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Active_To",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Remarks",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Type",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "SubType",
+                          "nillable": "true",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Source",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Confidence",
+                          "nillable": "true",
+                          "type": "xsd:long"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Source_Dat",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Used_By",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "created_us",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "created_da",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "last_edite",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "last_edi_1",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Shape_STAr",
+                          "nillable": "true",
+                          "type": "xsd:double"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Shape_STLe",
+                          "nillable": "true",
+                          "type": "xsd:double"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "GlobalID",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "$": {
+          "name": "UNAMID_COGI_Presence_LType"
+        },
+        "xsd:complexContent": [
+          {
+            "xsd:extension": [
+              {
+                "$": {
+                  "base": "gml:AbstractFeatureType"
+                },
+                "xsd:sequence": [
+                  {
+                    "xsd:element": [
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "the_geom",
+                          "nillable": "true",
+                          "type": "gml:MultiCurvePropertyType"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Country_Co",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Mission_Co",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Name",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "NameLong",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Label",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Active",
+                          "nillable": "true",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Active_Fro",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Active_To",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Remarks",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Level_",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "SubType",
+                          "nillable": "true",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Source",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Confidence",
+                          "nillable": "true",
+                          "type": "xsd:long"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Source_Dat",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "created_us",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "created_da",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "last_edite",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "last_edi_1",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "SHAPE_STLe",
+                          "nillable": "true",
+                          "type": "xsd:double"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "GlobalID",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "$": {
+          "name": "UNAMID_COGI_Risk_PType"
+        },
+        "xsd:complexContent": [
+          {
+            "xsd:extension": [
+              {
+                "$": {
+                  "base": "gml:AbstractFeatureType"
+                },
+                "xsd:sequence": [
+                  {
+                    "xsd:element": [
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "the_geom",
+                          "nillable": "true",
+                          "type": "gml:PointPropertyType"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Country_Co",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Mission_Co",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Name",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "NameLong",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Label",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Active",
+                          "nillable": "true",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Active_Fro",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Active_To",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Remarks",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Subtype",
+                          "nillable": "true",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Type",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Source",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Confidence",
+                          "nillable": "true",
+                          "type": "xsd:long"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "Source_Dat",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "created_us",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "created_da",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "last_edite",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "last_edi_1",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "GlobalID",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "$": {
+          "name": "buildings_0d66c791Type"
+        },
+        "xsd:complexContent": [
+          {
+            "xsd:extension": [
+              {
+                "$": {
+                  "base": "gml:AbstractFeatureType"
+                },
+                "xsd:sequence": [
+                  {
+                    "xsd:element": [
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "osm_id",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "name",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "type",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "wkb_geometry",
+                          "nillable": "true",
+                          "type": "gml:MultiSurfacePropertyType"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "$": {
+          "name": "isis_final_alldates_cdc8d9f8Type"
+        },
+        "xsd:complexContent": [
+          {
+            "xsd:extension": [
+              {
+                "$": {
+                  "base": "gml:AbstractFeatureType"
+                },
+                "xsd:sequence": [
+                  {
+                    "xsd:element": [
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "1",
+                          "name": "ogc_fid",
+                          "nillable": "false",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "id",
+                          "nillable": "true",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "group",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "date",
+                          "nillable": "true",
+                          "type": "xsd:date"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "enddate",
+                          "nillable": "true",
+                          "type": "xsd:date"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "wkb_geometry",
+                          "nillable": "true",
+                          "type": "gml:MultiSurfacePropertyType"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "date_as_date",
+                          "nillable": "true",
+                          "type": "xsd:dateTime"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "$": {
+          "name": "parcels_wgs84_20e71ce6Type"
+        },
+        "xsd:complexContent": [
+          {
+            "xsd:extension": [
+              {
+                "$": {
+                  "base": "gml:AbstractFeatureType"
+                },
+                "xsd:sequence": [
+                  {
+                    "xsd:element": [
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "1",
+                          "name": "ogc_fid",
+                          "nillable": "false",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "type",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "housenumbe",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "streetname",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "postalcode",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "accuracy",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "status",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "area",
+                          "nillable": "true",
+                          "type": "xsd:double"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "plan",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "pid",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "gislink",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "gid",
+                          "nillable": "true",
+                          "type": "xsd:long"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "zoning1",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "zone1_desc",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "zoning2",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "zone2_desc",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "zoning3",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "zone3_desc",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "zoning4",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "zone4_desc",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "wkb_geometry",
+                          "nillable": "true",
+                          "type": "gml:MultiSurfacePropertyType"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "$": {
+          "name": "san_andres_y_providencia_coastline_5b1ae1bf_6626ba7eType"
+        },
+        "xsd:complexContent": [
+          {
+            "xsd:extension": [
+              {
+                "$": {
+                  "base": "gml:AbstractFeatureType"
+                },
+                "xsd:sequence": [
+                  {
+                    "xsd:element": [
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "natural",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "name",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "wkb_geometry",
+                          "nillable": "true",
+                          "type": "gml:MultiCurvePropertyType"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "$": {
+          "name": "syria_places2Type"
+        },
+        "xsd:complexContent": [
+          {
+            "xsd:extension": [
+              {
+                "$": {
+                  "base": "gml:AbstractFeatureType"
+                },
+                "xsd:sequence": [
+                  {
+                    "xsd:element": [
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "the_geom",
+                          "nillable": "true",
+                          "type": "gml:PointPropertyType"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "osm_id",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "code",
+                          "nillable": "true",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "fclass",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "population",
+                          "nillable": "true",
+                          "type": "xsd:long"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "name",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "$": {
+          "name": "unamid_cogi_operations_p_b51eff91Type"
+        },
+        "xsd:complexContent": [
+          {
+            "xsd:extension": [
+              {
+                "$": {
+                  "base": "gml:AbstractFeatureType"
+                },
+                "xsd:sequence": [
+                  {
+                    "xsd:element": [
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "country_co",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "mission_co",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "name",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "namelong",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "label",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "active",
+                          "nillable": "true",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "active_fro",
+                          "nillable": "true",
+                          "type": "xsd:date"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "active_to",
+                          "nillable": "true",
+                          "type": "xsd:date"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "remarks",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "type",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "subtype",
+                          "nillable": "true",
+                          "type": "xsd:int"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "source",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "confidence",
+                          "nillable": "true",
+                          "type": "xsd:long"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "source_dat",
+                          "nillable": "true",
+                          "type": "xsd:date"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "used_by",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "created_us",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "created_da",
+                          "nillable": "true",
+                          "type": "xsd:date"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "last_edite",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "last_edi_1",
+                          "nillable": "true",
+                          "type": "xsd:date"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "externalid",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "globalid",
+                          "nillable": "true",
+                          "type": "xsd:string"
+                        }
+                      },
+                      {
+                        "$": {
+                          "maxOccurs": "1",
+                          "minOccurs": "0",
+                          "name": "wkb_geometry",
+                          "nillable": "true",
+                          "type": "gml:MultiPointPropertyType"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "xsd:element": [
+      {
+        "$": {
+          "name": "UNAMID_COGI_Operations_A",
+          "substitutionGroup": "gml:AbstractFeature",
+          "type": "geonode:UNAMID_COGI_Operations_AType"
+        }
+      },
+      {
+        "$": {
+          "name": "UNAMID_COGI_Presence_L",
+          "substitutionGroup": "gml:AbstractFeature",
+          "type": "geonode:UNAMID_COGI_Presence_LType"
+        }
+      },
+      {
+        "$": {
+          "name": "UNAMID_COGI_Risk_P",
+          "substitutionGroup": "gml:AbstractFeature",
+          "type": "geonode:UNAMID_COGI_Risk_PType"
+        }
+      },
+      {
+        "$": {
+          "name": "buildings_0d66c791",
+          "substitutionGroup": "gml:AbstractFeature",
+          "type": "geonode:buildings_0d66c791Type"
+        }
+      },
+      {
+        "$": {
+          "name": "isis_final_alldates_cdc8d9f8",
+          "substitutionGroup": "gml:AbstractFeature",
+          "type": "geonode:isis_final_alldates_cdc8d9f8Type"
+        }
+      },
+      {
+        "$": {
+          "name": "parcels_wgs84_20e71ce6",
+          "substitutionGroup": "gml:AbstractFeature",
+          "type": "geonode:parcels_wgs84_20e71ce6Type"
+        }
+      },
+      {
+        "$": {
+          "name": "san_andres_y_providencia_coastline_5b1ae1bf_6626ba7e",
+          "substitutionGroup": "gml:AbstractFeature",
+          "type": "geonode:san_andres_y_providencia_coastline_5b1ae1bf_6626ba7eType"
+        }
+      },
+      {
+        "$": {
+          "name": "syria_places2",
+          "substitutionGroup": "gml:AbstractFeature",
+          "type": "geonode:syria_places2Type"
+        }
+      },
+      {
+        "$": {
+          "name": "unamid_cogi_operations_p_b51eff91",
+          "substitutionGroup": "gml:AbstractFeature",
+          "type": "geonode:unamid_cogi_operations_p_b51eff91Type"
+        }
+      }
+    ]
+  }
+}

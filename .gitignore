@@ -1,3 +1,9 @@
+# Realm
+*.realm
+*.realm.lock
+realm-object-server
+default.realm.management
+
 # OSX
 #
 .DS_Store

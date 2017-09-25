@@ -1,0 +1,35 @@
+{
+  "xsd:schema": {
+    "$": {
+      "xmlns:sf": "http://www.openplans.org/spearfish",
+      "xmlns:tiger": "http://www.census.gov",
+      "xmlns:topp": "http://www.openplans.org/topp",
+      "xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
+      "elementFormDefault": "qualified",
+      "targetNamespace": "http://www.census.gov"
+    },
+    "xsd:import": [
+      {
+        "$": {
+          "namespace": "http://www.openplans.org/spearfish",
+          "schemaLocation":
+            "http://localhost:8080/geoserver/wfs?request=DescribeFeatureType&version=2.0.0&service=WFS&outputFormat=text%2Fxml%3B%20subtype%3Dgml%2F3.2&typeName=sf%3Aarchsites%2Csf%3Abugsites%2Csf%3Arestricted%2Csf%3Aroads%2Csf%3Astreams"
+        }
+      },
+      {
+        "$": {
+          "namespace": "http://www.census.gov",
+          "schemaLocation":
+            "http://localhost:8080/geoserver/wfs?request=DescribeFeatureType&version=2.0.0&service=WFS&outputFormat=text%2Fxml%3B%20subtype%3Dgml%2F3.2&typeName=tiger%3Agiant_polygon%2Ctiger%3Apoi%2Ctiger%3Apoly_landmarks%2Ctiger%3Atiger_roads"
+        }
+      },
+      {
+        "$": {
+          "namespace": "http://www.openplans.org/topp",
+          "schemaLocation":
+            "http://localhost:8080/geoserver/wfs?request=DescribeFeatureType&version=2.0.0&service=WFS&outputFormat=text%2Fxml%3B%20subtype%3Dgml%2F3.2&typeName=topp%3Astates%2Ctopp%3Atasmania_cities%2Ctopp%3Atasmania_roads%2Ctopp%3Atasmania_state_boundaries%2Ctopp%3Atasmania_water_bodies"
+        }
+      }
+    ]
+  }
+}

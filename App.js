@@ -11,6 +11,8 @@ import FarPoint from './FarPoint';
 import LayerList from './LayerList';
 import LayerDetails from './LayerDetails';
 import Form from './Form';
+import WFSAuth from './WFSAuth';
+import WFSSettings from './WFSSettings';
 import { lightGreen, green } from './styles';
 
 const AppStack = StackNavigator(
@@ -19,6 +21,8 @@ const AppStack = StackNavigator(
     LayerList: { screen: LayerList },
     LayerDetails: { screen: LayerDetails },
     Form: { screen: Form },
+    WFSAuth: { screen: WFSAuth },
+    WFSSettings: { screen: WFSSettings },
   },
   {
     navigationOptions: {

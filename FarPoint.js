@@ -10,22 +10,24 @@ import {
 } from 'react-native';
 import Realm from 'realm';
 import uuid from 'react-native-uuid';
+import Icon from 'react-native-vector-icons/Ionicons';
 import LayerList from './LayerList';
 import WFSList from './WFSList';
+import FButton from './FButton';
 import { getFeatureType } from './wfs';
 import * as db from './db';
-import { gray, darkGray } from './styles';
+import { orange, gray, darkGray } from './styles';
 
 export default class FarPoint extends Component {
   static navigationOptions = ({ navigation }) => {
     return {
-      title: 'Collector',
+      title: 'FarPoint',
     };
   };
 
   state = {
     loading: true,
-    wfsInput: 'https://dev.exchange.boundlessps.com/geoserver/ows',
+    wfsInput: 'http://localhost:8080/geoserver/ows',
   };
 
   onChangeText = wfsInput => {
@@ -34,31 +36,18 @@ export default class FarPoint extends Component {
 
   onPress = async () => {
     try {
-      const layers = await getFeatureType(this.state.wfsInput);
-      db.realm.write(() => {
-        const wfs = db.realm.create('WFS', {
-          id: uuid.v1(),
-          url: this.state.wfsInput,
-          layers: layers.map(l => ({
-            id: uuid.v1(),
-            layer_key: l.layer_key,
-            schema: JSON.stringify(l.schema),
-            submissions: [],
-          })),
-        });
-        this.setState({ wfs: db.realm.objects('WFS') });
-        const { navigate } = this.props.navigation;
-        navigate('LayerList', { wfs });
-      });
-    } catch (error) {}
+      const { navigate } = this.props.navigation;
+      navigate('WFSAuth', { wfsUrl: this.state.wfsInput });
+    } catch (error) {
+      console.log('wfs error', error);
+    }
   };
 
   componentWillMount() {
     db.monitor();
     const wfs = db.realm.objects('WFS');
     db.realm.addListener('change', (realm, type) => {
-      console.log('change');
-      this.forceUpdate();
+      //this.forceUpdate();
     });
     this.setState({ loading: false, wfs });
   }
@@ -73,7 +62,7 @@ export default class FarPoint extends Component {
         <View style={[styles.top, empty && { flex: 1 }]}>
           {empty && (
             <View>
-              <Text style={styles.welcome}>Welcome to Collector</Text>
+              <Text style={styles.welcome}>Welcome to FarPoint</Text>
               <Text style={styles.instructions}>
                 To begin, enter the URL for your WFS enabled GIS Server:
               </Text>
@@ -85,15 +74,14 @@ export default class FarPoint extends Component {
           <TextInput
             style={styles.input}
             multiline
+            autoCapitalize={'none'}
+            keyboardType={'url'}
             onChangeText={this.onChangeText}
             value={this.state.wfsInput}
           />
-          <Button
-            onPress={this.onPress}
-            title={empty ? 'Continue' : 'Add'}
-            color="#00f"
-            accessibilityLabel="Learn more about this purple button"
-          />
+          <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+            <Button onPress={this.onPress} title={empty ? 'Continue' : 'Add'} />
+          </View>
         </View>
         {!empty && (
           <View style={styles.bottom}>
@@ -142,6 +130,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 8,
     fontSize: 16,
+    marginBottom: 16,
   },
   headerBtn: {
     paddingRight: 16,

@@ -1,26 +1,18 @@
 import React, { Component } from 'react';
-import {
-  Dimensions,
-  FlatList,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  TouchableNativeFeedback,
-  View,
-} from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { NavigationActions } from 'react-navigation';
 import * as db from './db';
 import { blue, orange, gray, darkGray } from './styles';
 
 const FormCell = props => {
   const unsaved = props.layer.submissions.filtered(`insert_success == false`);
+  const metadata = JSON.parse(props.layer.metadata);
   return (
     <View>
       <TouchableOpacity onPress={props.onSelect}>
         <View style={styles.cellRow}>
           <Text style={styles.cellName} numberOfLines={1}>
-            {props.layer.layer_key}
+            {metadata.Title}
           </Text>
           <Text style={styles.cellSubtitle}>
             Records: {props.layer.submissions.length} Unsaved: {unsaved.length}
@@ -34,6 +26,28 @@ const FormCell = props => {
 export default class LayerList extends Component {
   static navigationOptions = ({ navigation }) => ({
     title: 'Layers',
+    headerLeft: (
+      <TouchableOpacity
+        onPress={() =>
+          navigation.dispatch(
+            NavigationActions.reset({
+              index: 0,
+              actions: [NavigationActions.navigate({ routeName: 'Home' })],
+            })
+          )}
+      >
+        <Text style={styles.leftBtnStyle}>Servers</Text>
+      </TouchableOpacity>
+    ),
+    headerRight: (
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate('WFSSettings', navigation.state.params);
+        }}
+      >
+        <Text style={styles.rightBtnStyle}>Settings</Text>
+      </TouchableOpacity>
+    ),
   });
 
   state = { submissions: {} };
@@ -55,7 +69,7 @@ export default class LayerList extends Component {
             <FormCell
               layer={item}
               onSelect={() => {
-                navigate('Form', { layer: item, wfs });
+                navigate('LayerDetails', { layer: item, wfs });
               }}
             />
           )}
@@ -71,6 +85,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  leftBtnStyle: {
+    paddingLeft: 16,
+    color: 'white',
+  },
+  rightBtnStyle: {
+    paddingRight: 16,
+    color: 'white',
   },
   wfs: {
     padding: 8,

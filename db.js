@@ -9,6 +9,8 @@ const WFSSchema = {
   properties: {
     id: 'string',
     url: 'string',
+    user: 'string',
+    password: 'string',
     layers: { type: 'list', objectType: 'Layer' },
   },
 };
@@ -18,8 +20,7 @@ const LayerSchema = {
   primaryKey: 'id',
   properties: {
     id: 'string',
-    layer_key: 'string',
-    schema: 'string',
+    metadata: 'string',
     submissions: { type: 'list', objectType: 'Submission' },
     wfs: { type: 'linkingObjects', objectType: 'WFS', property: 'layers' },
   },
@@ -30,6 +31,7 @@ const SubmissionSchema = {
   primaryKey: 'id',
   properties: {
     id: 'string',
+    operation: 'string', //insert || update
     point: 'string', // geojson
     insert_success: 'bool',
     insert_attempts: 'int',
@@ -49,12 +51,41 @@ export const monitor = () => {
   insertListener();
 };
 
-export const save = (layer, point) => {
-  console.log('saving');
+export const saveWFS = async (wfsUrl, user, password) => {
+  try {
+    const layers = await wfs.getFeatureType(wfsUrl);
+    let newWfs;
+    realm.write(() => {
+      newWfs = realm.create('WFS', {
+        id: uuid.v1(),
+        url: wfsUrl,
+        user,
+        password,
+        layers: layers.map(l => ({
+          id: uuid.v1(),
+          metadata: JSON.stringify(l),
+          submissions: [],
+        })),
+      });
+    });
+    return newWfs;
+  } catch (error) {
+    console.log('save error', error);
+    return false;
+  }
+};
+
+export const deleteWFS = wfs => {};
+
+export const syncWFS = wfs => {};
+
+export const save = (layer, point, operation = 'insert') => {
+  console.log('saving', layer, point, operation);
   try {
     realm.write(() => {
       const submission = {
         id: uuid.v1(),
+        operation,
         point: JSON.stringify(point),
         insert_success: false,
         insert_attempts: 0,
@@ -72,11 +103,12 @@ export const save = (layer, point) => {
 const insert = async submission => {
   console.log('inserting submission', submission);
   if (isConnected) {
+    console.log(submission.point);
     const point = JSON.parse(submission.point);
+    const operation = submission.operation;
     const layer = submission.layer[0];
-    const wfsUrl = layer.wfs[0].url;
-    const success = await wfs.insert(wfsUrl, layer, point);
-    //const success = true;
+    const _wfs = layer.wfs[0];
+    const success = await wfs.insert(_wfs, layer, point, operation);
     if (success) {
       insertSuccessful(submission);
       return;
@@ -126,7 +158,7 @@ const connectionListener = () => {
     isConnected = !(connectionType == 'none' || connectionType == 'unknown');
     console.log('isConnected', isConnected);
     if (isConnected) {
-      insertAll();
+      //insertAll();
     }
   };
   NetInfo.getConnectionInfo().then(updateConnectionInfo);

@@ -1,13 +1,14 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import scformschema from 'spatialconnect-form-schema/native';
+import { find } from 'lodash';
 import * as db from './db';
 import { gray, darkGray } from './styles';
 
 let self;
 class Form extends React.Component {
   static navigationOptions = ({ navigation }) => ({
-    title: navigation.state.params.layer.layer_label,
+    title: JSON.parse(navigation.state.params.layer.metadata).Title,
     headerRight: (
       <TouchableOpacity onPress={() => self.scform.onSubmit()}>
         <Text style={styles.submitBtnStyle}>Submit</Text>
@@ -20,47 +21,48 @@ class Form extends React.Component {
     this.state = {
       submitting: false,
       layer: null,
-      geometry: null,
     };
     this.saveForm = this.saveForm.bind(this);
   }
   saveForm(formData) {
     this.setState({ submitting: true });
-    const { layer } = this.props.navigation.state.params;
+    const { layer, feature, operation } = this.props.navigation.state.params;
     const gj = {
-      geometry: this.state.geometry,
+      id: feature.id,
+      geometry: feature.geometry,
       properties: formData,
     };
-    db.save(layer, gj);
+    db.save(layer, gj, operation);
     this.scform.formSubmitted();
     this.setState({ submitting: false });
   }
   componentWillMount() {
-    this.watchId = navigator.geolocation.watchPosition(
-      position => {
-        this.setState({
-          geometry: {
-            type: 'Point',
-            coordinates: [position.coords.longitude, position.coords.latitude],
-          },
+    const { layer, feature } = this.props.navigation.state.params;
+    const metadata = JSON.parse(layer.metadata);
+    const schema = metadata.schema;
+    if (feature) {
+      if (feature.properties) {
+        Object.keys(feature.properties).forEach(field_key => {
+          const field = find(schema.fields, { field_key });
+          if (field) {
+            field.constraints.initial_value = feature.properties[field_key];
+          }
         });
-      },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
-    );
-  }
-  componentWillUnmount() {
-    navigator.geolocation.clearWatch(this.watchId);
+      }
+    }
+    this.setState({ schema });
   }
   render() {
-    const { layer } = this.props.navigation.state.params;
+    const { layer, feature } = this.props.navigation.state.params;
     const { SCForm } = scformschema;
     const { submitting } = this.state;
     return (
       <View style={styles.container}>
-        {this.state.geometry && (
+        {feature &&
+        feature.geometry && (
           <View style={styles.location}>
             <Text>
-              Location: {this.state.geometry.coordinates[1]}, {this.state.geometry.coordinates[0]}
+              Location: {feature.geometry.coordinates[1]}, {feature.geometry.coordinates[0]}
             </Text>
           </View>
         )}
@@ -68,13 +70,12 @@ class Form extends React.Component {
           ref={scform => {
             this.scform = scform;
           }}
-          form={JSON.parse(layer.schema)}
+          form={this.state.schema}
           submitting={submitting}
           saveForm={this.saveForm}
         />
       </View>
     );
-    return <Text>Form</Text>;
   }
 }
 
