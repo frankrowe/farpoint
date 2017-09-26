@@ -111,9 +111,10 @@ export const syncWFS = wfs => {};
 
 export const save = (layer, point, operation = 'insert') => {
   console.log('saving', layer, point, operation);
+  let submission;
   try {
     realm.write(() => {
-      const submission = {
+      submission = {
         id: uuid.v1(),
         operation,
         point: JSON.stringify(point),
@@ -123,8 +124,10 @@ export const save = (layer, point, operation = 'insert') => {
       layer.submissions.push(submission);
     });
     realm.write(() => {}); //trigger notif
+    return submission;
   } catch (error) {
     console.log('save error', error);
+    return false;
   }
 };
 
@@ -141,10 +144,11 @@ const insert = async submission => {
     const success = await wfs.insert(_wfs, layer, point, operation);
     if (success) {
       insertSuccessful(submission);
-      return;
+      return true;
     }
   }
   insertFailure(submission);
+  return false;
 };
 
 const insertAll = () => {
