@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Text, TextInput, StyleSheet, View } from 'react-native';
 import { NavigationActions } from 'react-navigation';
 import * as db from './db';
+import * as exchange from './exchange';
 import { blue, orange, gray, darkGray } from './styles';
 
 class WFSAuth extends Component {
@@ -18,7 +19,7 @@ class WFSAuth extends Component {
   onPressAdd = async () => {
     const { navigate } = this.props.navigation;
     const { wfsUrl } = this.props.navigation.state.params;
-    const wfs = await db.saveWFS(wfsUrl, this.state.user, this.state.password);
+    const wfs = await db.saveExchange(wfsUrl, this.state.user, this.state.password);
     this.props.navigation.dispatch(
       NavigationActions.reset({
         index: 0,

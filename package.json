@@ -11,8 +11,16 @@
     "base-64": "0.1.0",
     "react": "16.0.0-alpha.12",
     "react-native": "0.48.3",
+    "react-native-image-picker": "0.26.7",
     "react-native-mapbox-gl": "5.2.0",
-    "react-native-vector-icons": "4.4.0"
+    "react-native-uuid": "1.4.9",
+    "react-native-vector-icons": "4.4.0",
+    "react-navigation": "1.0.0-beta.11",
+    "realm": "1.12.0",
+    "spatialconnect-form-schema": "3.0.3",
+    "tcomb-form-native": "0.6.10",
+    "tcomb-json-schema": "0.3.1",
+    "xml2js": "0.4.19"
   },
   "devDependencies": {
     "babel-jest": "21.0.2",

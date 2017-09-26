@@ -70,14 +70,15 @@ export default class LayerDetails extends Component {
   };
 
   onEditLocation = () => {
-    this._map.setCenterCoordinate(
-      this.state.selectedFeature.geometry.coordinates[1],
-      this.state.selectedFeature.geometry.coordinates[0],
-      true,
-      () => {
-        this.setState({ editing: true });
-      }
-    );
+    let coord;
+    if (this.state.selectedFeature.geometry.type === 'Point') {
+      coord = this.state.selectedFeature.geometry.coordinates;
+    } else if (this.state.selectedFeature.geometry.type === 'MultiPoint') {
+      coord = this.state.selectedFeature.geometry.coordinates[0];
+    }
+    this._map.setCenterCoordinate(coord[1], coord[0], false, () => {
+      this.setState({ editing: true });
+    });
   };
 
   onEditLocationCancel = () => {
@@ -88,13 +89,24 @@ export default class LayerDetails extends Component {
     const { layer, wfs } = this.props.navigation.state.params;
     const operation = 'update';
     this._map.getCenterCoordinateZoomLevel(data => {
-      const gj = {
-        ...this.state.selectedFeature,
-        geometry: {
-          ...this.state.selectedFeature.geometry,
-          coordinates: [data.longitude, data.latitude],
-        },
-      };
+      let gj;
+      if (this.state.selectedFeature.geometry.type === 'Point') {
+        gj = {
+          ...this.state.selectedFeature,
+          geometry: {
+            type: 'Point',
+            coordinates: [data.longitude, data.latitude],
+          },
+        };
+      } else if (this.state.selectedFeature.geometry.type === 'MultiPoint') {
+        gj = {
+          ...this.state.selectedFeature,
+          geometry: {
+            type: 'MultiPoint',
+            coordinates: [[data.longitude, data.latitude]],
+          },
+        };
+      }
       db.save(layer, gj, operation);
       this.setState({ editing: false, selectedFeature: null });
       this.makeAnnotations();
@@ -115,16 +127,17 @@ export default class LayerDetails extends Component {
     this._map.getCenterCoordinateZoomLevel(data => {
       this._map.getBounds(async bounds => {
         const geojson = await wfs.getFeatures(
-          this.props.navigation.state.params.wfs.url,
+          this.props.navigation.state.params.wfs,
           layer,
           bounds
         );
-        geojson.features = geojson.features.filter(
-          feature =>
-            feature.geometry &&
-            (feature.geometry.type === 'Point' || feature.geometry.type === 'MultiPoint')
-        );
-
+        geojson.features = geojson.features
+          .filter(
+            feature =>
+              feature.geometry &&
+              (feature.geometry.type === 'Point' || feature.geometry.type === 'MultiPoint')
+          )
+          .slice(0, wfs.LIMIT);
         this.setState({ geojson });
       });
     });
@@ -134,6 +147,7 @@ export default class LayerDetails extends Component {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
     setTimeout(() => {
+      console.log(metadata.bbox);
       this._map.setVisibleCoordinateBounds(
         +metadata.bbox[1],
         +metadata.bbox[0],

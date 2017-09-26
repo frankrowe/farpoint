@@ -2,6 +2,7 @@ import Realm from 'realm';
 import { NetInfo } from 'react-native';
 import uuid from 'react-native-uuid';
 import * as wfs from './wfs';
+import * as exchange from './exchange';
 
 const WFSSchema = {
   name: 'WFS',
@@ -11,6 +12,7 @@ const WFSSchema = {
     url: 'string',
     user: 'string',
     password: 'string',
+    token: 'string',
     layers: { type: 'list', objectType: 'Layer' },
   },
 };
@@ -51,9 +53,36 @@ export const monitor = () => {
   insertListener();
 };
 
+export const saveExchange = async (url, user, password) => {
+  try {
+    const token = await exchange.getToken(url, user, password);
+    const layers = await exchange.getLayers(url, token);
+    let newWfs;
+    realm.write(() => {
+      newWfs = realm.create('WFS', {
+        id: uuid.v1(),
+        url,
+        user,
+        password,
+        token: JSON.stringify(token),
+        layers: layers.map(l => ({
+          id: uuid.v1(),
+          metadata: JSON.stringify(l),
+          submissions: [],
+        })),
+      });
+    });
+    return newWfs;
+  } catch (error) {
+    console.log('save error', error);
+    return false;
+  }
+};
+
 export const saveWFS = async (wfsUrl, user, password) => {
   try {
     const layers = await wfs.getFeatureType(wfsUrl);
+    const token = await exchange.getToken(wfsUrl, user, password);
     let newWfs;
     realm.write(() => {
       newWfs = realm.create('WFS', {
@@ -61,6 +90,7 @@ export const saveWFS = async (wfsUrl, user, password) => {
         url: wfsUrl,
         user,
         password,
+        token,
         layers: layers.map(l => ({
           id: uuid.v1(),
           metadata: JSON.stringify(l),
