@@ -12,6 +12,8 @@ const WFSSchema = {
     url: 'string',
     user: 'string',
     password: 'string',
+    clientId: 'string',
+    clientSecret: 'string',
     token: 'string',
     layers: { type: 'list', objectType: 'Layer' },
   },
@@ -53,7 +55,7 @@ export const monitor = () => {
   insertListener();
 };
 
-export const saveExchange = async (url, user, password) => {
+export const saveExchange = async (url, user, password, clientId, clientSecret) => {
   try {
     const token = await exchange.getToken(url, user, password);
     const layers = await exchange.getLayers(url, token);
@@ -64,6 +66,8 @@ export const saveExchange = async (url, user, password) => {
         url,
         user,
         password,
+        clientId,
+        clientSecret,
         token: JSON.stringify(token),
         layers: layers.map(l => ({
           id: uuid.v1(),
