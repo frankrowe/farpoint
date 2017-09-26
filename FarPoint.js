@@ -27,7 +27,7 @@ export default class FarPoint extends Component {
 
   state = {
     loading: true,
-    wfsInput: 'http://localhost:8080/geoserver/ows',
+    wfsInput: 'https://exchange.boundlessgeo.io/geoserver/ows',
   };
 
   onChangeText = wfsInput => {

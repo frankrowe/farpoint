@@ -120,7 +120,9 @@ export default class LayerDetails extends Component {
           bounds
         );
         geojson.features = geojson.features.filter(
-          feature => feature.geometry && feature.geometry.type === 'Point'
+          feature =>
+            feature.geometry &&
+            (feature.geometry.type === 'Point' || feature.geometry.type === 'MultiPoint')
         );
 
         this.setState({ geojson });

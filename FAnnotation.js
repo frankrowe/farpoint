@@ -25,13 +25,24 @@ export const FAnnotationView = ({ radius, borderWidth, backgroundColor, selected
 const FAnnotation = ({ feature, onOpenAnnotation, backgroundColor, radius, selected }) => {
   let _radius = radius ? radius : DEFAULT_RADIUS;
   let _backgroundColor = backgroundColor ? backgroundColor : 'red';
+  let coordinate;
+  if (feature.geometry.type === 'MultiPoint') {
+    //TODO show all points, not just first
+    coordinate = {
+      latitude: feature.geometry.coordinates[0][1],
+      longitude: feature.geometry.coordinates[0][0],
+    };
+  } else {
+    //should be Point
+    coordinate = {
+      latitude: feature.geometry.coordinates[1],
+      longitude: feature.geometry.coordinates[0],
+    };
+  }
   return (
     <Annotation
       id={feature.id}
-      coordinate={{
-        latitude: feature.geometry.coordinates[1],
-        longitude: feature.geometry.coordinates[0],
-      }}
+      coordinate={coordinate}
       style={{ alignItems: 'center', justifyContent: 'center', position: 'absolute' }}
     >
       <TouchableOpacity onPress={() => onOpenAnnotation(feature)}>
