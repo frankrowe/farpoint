@@ -10,6 +10,8 @@
     "@mapbox/react-native-mapbox-gl": "5.2.3-alpha1",
     "@turf/turf": "4.7.3",
     "base-64": "0.1.0",
+    "buffer": "^5.0.7",
+    "events": "^1.1.1",
     "react": "16.0.0-alpha.12",
     "react-native": "0.48.3",
     "react-native-image-picker": "0.26.7",
@@ -21,6 +23,7 @@
     "spatialconnect-form-schema": "3.0.4",
     "tcomb-form-native": "0.6.10",
     "tcomb-json-schema": "0.3.1",
+    "timers": "^0.1.1",
     "xml2js": "0.4.19"
   },
   "devDependencies": {
@@ -32,8 +35,6 @@
   },
   "jest": {
     "preset": "react-native",
-    "setupFiles": [
-      "./setupTests.js"
-    ]
+    "setupFiles": ["./setupTests.js"]
   }
 }
