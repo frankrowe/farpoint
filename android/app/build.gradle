@@ -90,8 +90,8 @@ def enableSeparateBuildPerCPUArchitecture = false
 def enableProguardInReleaseBuilds = false
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    compileSdkVersion 25
+    buildToolsVersion '25.0.0'
 
     defaultConfig {
         applicationId "com.farpoint"
@@ -131,11 +131,21 @@ android {
         }
     }
 }
+//configurations.all {
+//    resolutionStrategy {
+//        force "com.squareup.okhttp3:okhttp:3.4.2"
+//        force "com.squareup.okhttp3:okhttp-ws:3.4.2"
+//    }
+//}
 
 dependencies {
+    compile project(':react-native-vector-icons')
+    compile project(':react-native-mapbox-gl')
+    compile project(':react-native-image-picker')
+    compile project(':@mapbox/react-native-mapbox-gl')
     compile project(':realm')
     compile fileTree(dir: "libs", include: ["*.jar"])
-    compile "com.android.support:appcompat-v7:23.0.1"
+    compile "com.android.support:appcompat-v7:25.0.0"
     compile "com.facebook.react:react-native:+"  // From node_modules
 }
 
