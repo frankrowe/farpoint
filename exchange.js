@@ -1,4 +1,5 @@
 import base64 from 'base-64';
+import { find } from 'lodash';
 import * as wfs from './wfs';
 import config from './config.json';
 
@@ -31,11 +32,14 @@ const makeField = (field, idx) => ({
 const makeLayer = async (wfsUrl, layerName, token) => {
   const json = await getLayer(wfsUrl, layerName, token);
   const features = await wfs.getAllFeatures(wfsUrl, layerName, token);
+  const geom = find(json.attributes, { attribute: 'wkb_geometry' });
+  const geomType = geom ? geom.attribute_type : 'gml:PointPropertyType';
   return {
     layer_key: json.name,
     Title: json.title,
     feature_type: layerName,
     features: JSON.stringify(features),
+    geomType,
     bbox: json.bbox_string.split(','),
     namespace: { 'xmlns:geonode': 'http://geonode' },
     schema: {

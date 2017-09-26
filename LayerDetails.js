@@ -48,12 +48,23 @@ export default class LayerDetails extends Component {
     const { layer, wfs } = this.props.navigation.state.params;
     this.props.navigation.setParams({ adding: false });
     this._map.getCenterCoordinateZoomLevel(data => {
-      const feature = {
-        geometry: {
-          type: 'MultiPoint',
-          coordinates: [[data.longitude, data.latitude]],
-        },
-      };
+      let feature;
+      const metadata = JSON.parse(layer.metadata);
+      if (metadata.geomType === 'gml:MultiPointPropertyType') {
+        feature = {
+          geometry: {
+            type: 'MultiPoint',
+            coordinates: [[data.longitude, data.latitude]],
+          },
+        };
+      } else if (metadata.geomType === 'gml:PointPropertyType') {
+        feature = {
+          geometry: {
+            type: 'Point',
+            coordinates: [data.longitude, data.latitude],
+          },
+        };
+      }
       const operation = 'insert';
       navigate('Form', { layer, wfs, feature, operation });
     });
