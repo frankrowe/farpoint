@@ -94,7 +94,7 @@ export const getFeatures = async (wfs, layer, bbox = [-90, -190, 90, 180]) => {
     ?service=WFS
     &version=1.1.0
     &request=GetFeature
-    &count=${LIMIT}
+    &maxFeatures=${LIMIT}
     &typeName=${typeName}
     &outputFormat=json
     &srsName=urn:ogc:def:crs:EPSG::4326
@@ -173,7 +173,6 @@ const createInsertPayload = (layer, point) => {
     service="WFS"
     version="1.1.0"
     ${namespaceName}="${namespaceUri}"
-    xmlns:geonode="http://geonode"
     xmlns:ows="http://www.opengis.net/ows"
     xmlns:wfs="http://www.opengis.net/wfs"
     xmlns:gml="http://www.opengis.net/gml"
@@ -181,12 +180,18 @@ const createInsertPayload = (layer, point) => {
     <wfs:Insert>`;
   xml += `<${metadata.feature_type}>`;
   if (point.geometry.coordinates.length) {
-    xml += `
-          <the_geom>
-            <gml:Point srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
-              <gml:pos>${point.geometry.coordinates[0]} ${point.geometry.coordinates[1]}</gml:pos>
-            </gml:Point>
-          </the_geom>`;
+    let pos;
+    if (point.geometry.type === 'Point') {
+      pos = `${point.geometry.coordinates[0]} ${point.geometry.coordinates[1]}`;
+      xml += `<wkb_geometry>
+                  <gml:Point srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+                    <gml:pos>${pos}</gml:pos>
+                 </gml:Point>
+                </wkb_geometry>`;
+    } else if (point.geometry.type === 'MultiPoint') {
+      pos = `${point.geometry.coordinates[0][0]} ${point.geometry.coordinates[0][1]}`;
+      xml += `<wkb_geometry><gml:MultiPoint xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:4326"><gml:pointMember><gml:Point><gml:pos decimal="." cs="," ts=" ">${pos}</gml:pos></gml:Point></gml:pointMember></gml:MultiPoint></wkb_geometry>`;
+    }
   }
   xml += Object.keys(point.properties)
     .map(key => {
@@ -195,6 +200,8 @@ const createInsertPayload = (layer, point) => {
         let value = point.properties[key];
         if (field.type === 'date') {
           value = new Date(value).toISOString();
+        } else if (typeof value === 'string') {
+          value = value.replace(/&/g, '&amp;');
         }
         return `<${key}>${value}</${key}>`;
       }
@@ -211,6 +218,7 @@ const createInsertPayload = (layer, point) => {
 };
 
 const createUpdatePayload = (layer, point) => {
+  console.log(point);
   const metadata = JSON.parse(layer.metadata);
   const schema = metadata.schema;
   const namespaceName = Object.keys(metadata.namespace)[0];
@@ -247,16 +255,18 @@ const createUpdatePayload = (layer, point) => {
     .map(key => {
       if (point.properties[key] !== null) {
         const field = find(schema.fields, { field_key: key });
-        let value = point.properties[key];
-        if (field.type === 'date') {
-          value = new Date(value).toISOString();
-        } else if (typeof value === 'string') {
-          value = value.replace(/&/g, '&amp;');
-        }
-        return `<wfs:Property>
+        if (field) {
+          let value = point.properties[key];
+          if (field.type === 'date') {
+            value = new Date(value).toISOString();
+          } else if (typeof value === 'string') {
+            value = value.replace(/&/g, '&amp;');
+          }
+          return `<wfs:Property>
         <wfs:Name>${key}</wfs:Name>
         <wfs:Value>${value}</wfs:Value>
         </wfs:Property>`;
+        }
       }
       return '';
     })

@@ -29,6 +29,7 @@ const makeField = (field, idx) => ({
 
 const makeLayer = async (wfsUrl, layerName, token) => {
   const json = await getLayer(wfsUrl, layerName, token);
+  console.log(json);
   return {
     layer_key: json.name,
     Title: json.title,
@@ -36,7 +37,10 @@ const makeLayer = async (wfsUrl, layerName, token) => {
     bbox: json.bbox_string.split(','),
     namespace: { 'xmlns:geonode': 'http://geonode' },
     schema: {
-      fields: json.attributes.map(makeField).filter(f => f.type),
+      fields: json.attributes
+        .filter(a => a.visible)
+        .map(makeField)
+        .filter(f => f.type),
     },
   };
 };

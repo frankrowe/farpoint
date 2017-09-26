@@ -48,8 +48,8 @@ export default class LayerDetails extends Component {
     this._map.getCenterCoordinateZoomLevel(data => {
       const feature = {
         geometry: {
-          type: 'Point',
-          coordinates: [data.longitude, data.latitude],
+          type: 'MultiPoint',
+          coordinates: [[data.longitude, data.latitude]],
         },
       };
       const operation = 'insert';

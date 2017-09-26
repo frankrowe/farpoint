@@ -56,16 +56,22 @@ class Form extends React.Component {
     const { layer, feature } = this.props.navigation.state.params;
     const { SCForm } = scformschema;
     const { submitting } = this.state;
+    let coord;
+    if (feature.geometry.type === 'Point') {
+      coord = feature.geometry.coordinates;
+    } else if (feature.geometry.type === 'MultiPoint') {
+      coord = feature.geometry.coordinates[0];
+    }
     return (
       <View style={styles.container}>
         {feature &&
-        feature.geometry && (
-          <View style={styles.location}>
-            <Text>
-              Location: {feature.geometry.coordinates[1]}, {feature.geometry.coordinates[0]}
-            </Text>
-          </View>
-        )}
+          feature.geometry && (
+            <View style={styles.location}>
+              <Text>
+                Location: {coord[1]}, {coord[0]}
+              </Text>
+            </View>
+          )}
         <SCForm
           ref={scform => {
             this.scform = scform;
