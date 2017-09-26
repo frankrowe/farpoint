@@ -47,7 +47,7 @@ export default class App extends React.Component {
     return (
       <View style={{ flex: 1 }}>
         <StatusBar backgroundColor={green} barStyle="light-content" />
-        <AppStack />
+        <AppStack onNavigationStateChange={null} />
       </View>
     );
   }

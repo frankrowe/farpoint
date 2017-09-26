@@ -2,7 +2,7 @@ import { find, flattenDeep } from 'lodash';
 import { parseString } from 'xml2js';
 import base64 from 'base-64';
 
-export const LIMIT = 10;
+export const LIMIT = 200;
 
 const parseXml = xml => {
   return new Promise((resolve, reject) => {
@@ -60,11 +60,9 @@ export const getCapabilities = async wfs => {
     const response = await fetch(url);
     const xml = await response.text();
     const result = await parseXml(xml);
-    console.log(result);
     const featureTypeList = result['wfs:WFS_Capabilities']['FeatureTypeList'][0][
       'FeatureType'
     ].map(f => {
-      console.log(f);
       return {
         namespace: f['$'],
         Name: f['Name'][0],
@@ -106,7 +104,28 @@ export const getFeatures = async (wfs, layer, bbox = [-90, -190, 90, 180]) => {
     url = url.replace(/\s/g, '');
     console.log(url);
     const response = await fetch(url);
-    console.log(response);
+    const json = await response.json();
+    return json;
+  } catch (error) {
+    console.log('getFeatures error', error);
+    return false;
+  }
+};
+
+export const getAllFeatures = async (wfsUrl, layerName, token) => {
+  let url = `${wfsUrl}/geoserver/ows
+    ?service=WFS
+    &version=1.1.0
+    &request=GetFeature
+    &typeName=${layerName}
+    &outputFormat=json
+    &srsName=urn:ogc:def:crs:EPSG::4326`;
+  try {
+    if (token && token.access_token) {
+      url += `&access_token=${token.access_token}`;
+    }
+    url = url.replace(/\s/g, '');
+    const response = await fetch(url);
     const json = await response.json();
     return json;
   } catch (error) {
@@ -148,7 +167,6 @@ export const getFeatureType = async wfs => {
     const response = await fetch(url);
     const xml = await response.text();
     const result = await parseXml(xml);
-    console.log(result);
     const featureTypeList = await getCapabilities(wfs);
     const schemas = await parseFeatureTypes(result);
     const layers = schemas.map(layer => {

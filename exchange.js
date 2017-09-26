@@ -1,8 +1,9 @@
 import base64 from 'base-64';
+import * as wfs from './wfs';
 import config from './config.json';
 
 const chooseType = field => {
-  if (field.attribute === 'photo') return 'photo';
+  if (field.attribute === 'photos') return 'photo';
   switch (field.attribute_type) {
     case 'xsd:string':
       return 'string';
@@ -29,11 +30,12 @@ const makeField = (field, idx) => ({
 
 const makeLayer = async (wfsUrl, layerName, token) => {
   const json = await getLayer(wfsUrl, layerName, token);
-  console.log(json);
+  const features = await wfs.getAllFeatures(wfsUrl, layerName, token);
   return {
     layer_key: json.name,
     Title: json.title,
     feature_type: layerName,
+    features: JSON.stringify(features),
     bbox: json.bbox_string.split(','),
     namespace: { 'xmlns:geonode': 'http://geonode' },
     schema: {
