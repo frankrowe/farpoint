@@ -283,8 +283,7 @@ export default class LayerDetails extends Component {
           }}
           style={styles.map}
           annotationsAreImmutable
-          annotationsPopUpEnabled={false}
-          onOpenAnnotation={this.onOpenAnnotation}
+          annotationsPopUpEnabled={false}          
           onRegionDidChange={this.onRegionDidChange}
         >
           {!!this.state.geojson &&
