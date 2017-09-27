@@ -139,14 +139,11 @@ export const saveWFS = async (wfsUrl, user, password) => {
 export const deleteWFS = wfs => {};
 
 export const syncWFS = wfs => {
-  realm
-    .objects('WFS')
-    .filtered(`url == "${wfs.url}"`)
-    .forEach(wfs => {
-      wfs.layers.forEach(layer => {
-        layer.submissions.filtered('insert_success == false').forEach(insert);
-      });
-    });
+  let inserts = [];
+  wfs.layers.forEach(layer => {
+    inserts = inserts.concat(layer.submissions.filtered('insert_success == false').map(insert));
+  });
+  return Promise.all(inserts);
 };
 
 export const save = (layer, point, operation = 'insert') => {
