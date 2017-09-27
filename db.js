@@ -95,7 +95,6 @@ export const refreshWFS = async wfs => {
     realm.write(() => {
       layers.forEach(layer => {
         const existingLayer = find(wfs.layers, { key: layer.layer_key });
-        console.log(existingLayer, layer);
         if (existingLayer) {
           existingLayer.metadata = JSON.stringify(layer);
         } else {
@@ -103,7 +102,7 @@ export const refreshWFS = async wfs => {
         }
       });
     });
-    return true;
+    return wfs;
   } catch (error) {
     console.log('refresh error', error);
     return false;
@@ -141,7 +140,7 @@ export const deleteWFS = wfs => {
     // delete inside a transaction
     realm.write(() => realm.delete(wfs));
   } catch (e) {
-    console.log("Error deleting wfs", wfs);
+    console.log('Error deleting wfs', wfs);
   }
 };
 
