@@ -160,6 +160,17 @@ export default class LayerDetails extends Component {
     navigate('Form', { layer, wfs, feature, operation });
   };
 
+  onPressDelete = async () => {
+    const feature = this.state.selectedFeature;
+    const layer = this.props.navigation.state.params.layer;
+    await db.deleteFeature(layer, feature);
+    this.setState({ selectedFeature: null });
+  };
+
+  onTap = (payload) => {
+    this.setState({ selectedFeature: null });
+  }
+
   makeAnnotations = async () => {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
@@ -280,6 +291,7 @@ export default class LayerDetails extends Component {
           annotationsPopUpEnabled={false}
           onOpenAnnotation={this.onOpenAnnotation}
           onRegionDidChange={this.onRegionDidChange}
+          onTap={this.onTap}
         >
           {!!this.state.geojson &&
             !!this.state.geojson.features.length &&
@@ -314,6 +326,7 @@ export default class LayerDetails extends Component {
                 onEditClose={this.onEditClose}
                 onEditProperties={this.onEditProperties}
                 onEditLocation={this.onEditLocation}
+                onPressDelete={this.onPressDelete}
               />
             </View>
           )}

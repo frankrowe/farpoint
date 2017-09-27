@@ -29,6 +29,7 @@ const FeatureDetails = ({
   onEditClose,
   onEditLocation,
   onEditProperties,
+  onPressDelete,
 }) => {
   const metadata = JSON.parse(layer.metadata);
   const fields = sortBy(metadata.schema.fields, f => f.position);
@@ -53,7 +54,7 @@ const FeatureDetails = ({
       >
         <Button onPress={onEditLocation} title="Edit Location" style={{ fontSize: 14 }} />
         <Button onPress={onEditProperties} title="Edit Properties" style={{ fontSize: 14 }} />
-        <Button onPress={onEditClose} title="Close" color={'#D9534F'} style={{ fontSize: 14 }} />
+        <Button onPress={onPressDelete} title="Delete" color={'#D9534F'} style={{ fontSize: 14 }} />
       </View>
       <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', paddingTop: 8, flex: 1 }}>
         <Text
