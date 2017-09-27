@@ -60,7 +60,7 @@ export const monitor = () => {
 export const newLayer = layer => ({
   id: uuid.v1(),
   key: layer.layer_key,
-  metadata: JSON.stringify(l),
+  metadata: JSON.stringify(layer),
   submissions: [],
 });
 

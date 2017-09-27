@@ -157,7 +157,6 @@ export default class LayerDetails extends Component {
     const { layer, wfs } = this.props.navigation.state.params;
     const feature = this.state.selectedFeature;
     const operation = 'update';
-    this.setState({ selectedFeature: null });
     navigate('Form', { layer, wfs, feature, operation });
   };
 
@@ -310,6 +309,7 @@ export default class LayerDetails extends Component {
           !this.state.editing && (
             <View style={[styles.overlay, { justifyContent: 'flex-end' }]} pointerEvents="box-none">
               <FeatureDetails
+                layer={layer}
                 selectedFeature={this.state.selectedFeature}
                 onEditClose={this.onEditClose}
                 onEditProperties={this.onEditProperties}
