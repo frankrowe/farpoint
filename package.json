@@ -7,7 +7,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@mapbox/react-native-mapbox-gl": "5.2.2",
+    "@mapbox/react-native-mapbox-gl": "tingold/react-native-mapbox-gl#21312a3",
     "@turf/turf": "4.7.3",
     "base-64": "0.1.0",
     "buffer": "^5.0.7",
