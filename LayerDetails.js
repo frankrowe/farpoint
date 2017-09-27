@@ -1,5 +1,14 @@
 import React, { Component } from 'react';
-import { Button, Image, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Button,
+  Image,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Mapbox, { Annotation, MapView } from 'react-native-mapbox-gl';
 import turfInside from '@turf/inside';
 import bboxPolygon from '@turf/bbox-polygon';
@@ -167,13 +176,16 @@ export default class LayerDetails extends Component {
         type: 'FeatureCollection',
         features: [],
       };
-      geojson.features = featureCollection.features
-        .slice(0, wfs.LIMIT)
-        .filter(
-          feature =>
-            feature.geometry &&
-            (feature.geometry.type === 'Point' || feature.geometry.type === 'MultiPoint')
-        );
+      if (featureCollection.features) {
+        geojson.features = featureCollection.features
+          .slice(0, wfs.LIMIT)
+          .filter(
+            feature =>
+              feature.geometry &&
+              (feature.geometry.type === 'Point' || feature.geometry.type === 'MultiPoint')
+          );
+      }
+
       // .map(feature => {
       //   if (feature.geometry.type === 'MultiPoint') {
       //     return {
