@@ -78,6 +78,7 @@ export default class FarPoint extends Component {
             keyboardType={'url'}
             onChangeText={this.onChangeText}
             value={this.state.wfsInput}
+            underlineColorAndroid="transparent"
           />
           <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
             <Button onPress={this.onPress} title={empty ? 'Continue' : 'Add'} />
