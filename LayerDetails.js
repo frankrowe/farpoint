@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { Button, Image, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Mapbox, { Annotation, MapView } from 'react-native-mapbox-gl';
+import turfInside from '@turf/inside';
+import bboxPolygon from '@turf/bbox-polygon';
 import AddFeature from './AddFeature';
 import FeatureCount from './FeatureCount';
 import FeatureDetails from './FeatureDetails';
@@ -46,12 +48,23 @@ export default class LayerDetails extends Component {
     const { layer, wfs } = this.props.navigation.state.params;
     this.props.navigation.setParams({ adding: false });
     this._map.getCenterCoordinateZoomLevel(data => {
-      const feature = {
-        geometry: {
-          type: 'MultiPoint',
-          coordinates: [[data.longitude, data.latitude]],
-        },
-      };
+      let feature;
+      const metadata = JSON.parse(layer.metadata);
+      if (metadata.geomType === 'gml:MultiPointPropertyType') {
+        feature = {
+          geometry: {
+            type: 'MultiPoint',
+            coordinates: [[data.longitude, data.latitude]],
+          },
+        };
+      } else if (metadata.geomType === 'gml:PointPropertyType') {
+        feature = {
+          geometry: {
+            type: 'Point',
+            coordinates: [data.longitude, data.latitude],
+          },
+        };
+      }
       const operation = 'insert';
       navigate('Form', { layer, wfs, feature, operation });
     });
@@ -88,7 +101,7 @@ export default class LayerDetails extends Component {
   onEditLocationSave = () => {
     const { layer, wfs } = this.props.navigation.state.params;
     const operation = 'update';
-    this._map.getCenterCoordinateZoomLevel(data => {
+    this._map.getCenterCoordinateZoomLevel(async data => {
       let gj;
       if (this.state.selectedFeature.geometry.type === 'Point') {
         gj = {
@@ -107,7 +120,24 @@ export default class LayerDetails extends Component {
           },
         };
       }
-      db.save(layer, gj, operation);
+      const submission = db.save(layer, gj, operation);
+      if (submission) {
+        const insertSuccess = await db.insert(submission);
+        if (insertSuccess) {
+          // success
+          Alert.alert('Success', 'Location has been updated.', [{ text: 'OK' }]);
+        } else {
+          Alert.alert(
+            'Saved',
+            "This update was unable to be uploaded. It's been saved, and you can attempt to sync at a later time.",
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        Alert.alert('Error', 'There was an error saving this update. Please try again.', [
+          { text: 'OK' },
+        ]);
+      }
       this.setState({ editing: false, selectedFeature: null });
       this.makeAnnotations();
     });
@@ -122,33 +152,56 @@ export default class LayerDetails extends Component {
     navigate('Form', { layer, wfs, feature, operation });
   };
 
-  makeAnnotations = async () => {
+  makeAnnotations = async (bbox) => {
     const { layer } = this.props.navigation.state.params;
-    this._map.getCenterCoordinateZoomLevel(data => {
-      this._map.getBounds(async bounds => {
-        const geojson = await wfs.getFeatures(
-          this.props.navigation.state.params.wfs,
-          layer,
-          bounds
+    const metadata = JSON.parse(layer.metadata);
+    //const featureCollection = JSON.parse(metadata.features);
+
+    // this._map.getBounds(async bounds => {
+      //const bbox = bboxPolygon([bounds[1], bounds[0], bounds[3], bounds[2]]);
+      const featureCollection = await wfs.getFeatures(
+        this.props.navigation.state.params.wfs,
+        layer,
+        bbox
+      );
+      const geojson = {
+        type: 'FeatureCollection',
+        features: [],
+      };
+      geojson.features = featureCollection.features
+        .slice(0, wfs.LIMIT)
+        .filter(
+          feature =>
+            feature.geometry &&
+            (feature.geometry.type === 'Point' || feature.geometry.type === 'MultiPoint')
         );
-        geojson.features = geojson.features
-          .filter(
-            feature =>
-              feature.geometry &&
-              (feature.geometry.type === 'Point' || feature.geometry.type === 'MultiPoint')
-          )
-          .slice(0, wfs.LIMIT);
-        this.setState({ geojson });
-      });
-    });
+      // .map(feature => {
+      //   if (feature.geometry.type === 'MultiPoint') {
+      //     return {
+      //       ...feature,
+      //       geometry: {
+      //         type: 'Point',
+      //         coordinates: feature.geometry.coordinates[0],
+      //       },
+      //     };
+      //   }
+      //   return feature;
+      // })
+      // .filter(feature => turfInside(feature, bbox));
+      this.setState({ geojson });
+    //});
+
   };
 
   zoomToLayerBounds = () => {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
-    setTimeout(() => {
-      console.log(metadata.bbox);
-      this._map.setVisibleCoordinateBounds(
+    console.log(metadata);
+
+    if(metadata){
+      setTimeout(() => {
+        console.log(metadata.bbox);
+        this._map.setVisibleCoordinateBounds(
         +metadata.bbox[1],
         +metadata.bbox[0],
         +metadata.bbox[3],
@@ -159,6 +212,7 @@ export default class LayerDetails extends Component {
         100
       );
     }, 1000);
+  }
   };
 
   componentDidMount() {

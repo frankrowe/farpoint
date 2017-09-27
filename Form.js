@@ -24,7 +24,7 @@ class Form extends React.Component {
     };
     this.saveForm = this.saveForm.bind(this);
   }
-  saveForm(formData) {
+  async saveForm(formData) {
     this.setState({ submitting: true });
     const { layer, feature, operation } = this.props.navigation.state.params;
     const gj = {
@@ -32,7 +32,17 @@ class Form extends React.Component {
       geometry: feature.geometry,
       properties: formData,
     };
-    db.save(layer, gj, operation);
+    const submission = db.save(layer, gj, operation);
+    if (submission) {
+      const insertSuccess = await db.insert(submission);
+      if (insertSuccess) {
+        this.scform.formSubmitted();
+      } else {
+        this.scform.formSubmittedOffline();
+      }
+    } else {
+      this.scform.formSubmittedError();
+    }
     this.scform.formSubmitted();
     this.setState({ submitting: false });
   }
