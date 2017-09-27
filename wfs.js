@@ -300,13 +300,38 @@ const createUpdatePayload = (layer, point) => {
   return xml;
 };
 
-export const insert = async (wfs, layer, point, operation = 'insert') => {
+const createDeletePayload = (layer, point) => {
+  const metadata = JSON.parse(layer.metadata);
+  const namespaceName = Object.keys(metadata.namespace)[0];
+  const namespaceUri = metadata.namespace[namespaceName];
+  let xml =
+  `<wfs:Transaction
+      service="WFS"
+      version="1.1.0"
+      ${namespaceName}="${namespaceUri}"
+      xmlns:ogc="http://www.opengis.net/ogc"
+      xmlns:ows="http://www.opengis.net/ows"
+      xmlns:wfs="http://www.opengis.net/wfs"
+      xmlns:gml="http://www.opengis.net/gml"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	  <wfs:Delete typeName="${metadata.feature_type}">
+	    <ogc:Filter>
+	      <ogc:FeatureId fid="${point.id}" />
+	    </ogc:Filter>
+	  </wfs:Delete>
+	</wfs:Transaction>`;
+  return xml;
+};
+
+export const postTransaction = async (wfs, layer, point, operation = 'insert') => {
   try {
     let body;
     if (operation === 'insert') {
       body = createInsertPayload(layer, point);
     } else if (operation === 'update') {
       body = createUpdatePayload(layer, point);
+    } else if (operation === 'delete') {
+      body = createDeletePayload(layer, point);
     }
     const headers = {
       'Content-Type': 'text/xml',
@@ -345,6 +370,13 @@ export const insert = async (wfs, layer, point, operation = 'insert') => {
             ? summary[0]['wfs:totalUpdated'][0]
             : false;
           if (totalUpdated === '1') {
+            success = true;
+          }
+        } else if (operation === 'delete') {
+          const totalDeleted = summary[0]['wfs:totalDeleted']
+            ? summary[0]['wfs:totalDeleted'][0]
+            : false;
+          if (totalDeleted === '1') {
             success = true;
           }
         }

@@ -34,7 +34,7 @@ export default class WFSSettings extends Component {
   };
 
   deleteWFS = async (navigate, wfs) => {
-    await db.deleteWFS(wfs);
+    await db.deleteObject(wfs);
     navigate('Home');
   };
 

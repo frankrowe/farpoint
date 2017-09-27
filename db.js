@@ -135,12 +135,12 @@ export const saveWFS = async (wfsUrl, user, password) => {
   }
 };
 
-export const deleteWFS = wfs => {
+export const deleteObject = async realmObject => {
   try {
     // delete inside a transaction
-    realm.write(() => realm.delete(wfs));
+    realm.write(() => realm.delete(realmObject));
   } catch (e) {
-    console.log('Error deleting wfs', wfs);
+    console.log('Error deleting', realmObject);
   }
 };
 
@@ -174,6 +174,11 @@ export const save = (layer, point, operation = 'insert') => {
   }
 };
 
+export const deleteFeature = async (layer, point) => {
+  const _wfs = layer.wfs[0];
+  const success = await wfs.postTransaction(_wfs, layer, point, 'delete');
+};
+
 // Private methods
 
 export const insert = async submission => {
@@ -184,7 +189,7 @@ export const insert = async submission => {
     const operation = submission.operation;
     const layer = submission.layer[0];
     const _wfs = layer.wfs[0];
-    const success = await wfs.insert(_wfs, layer, point, operation);
+    const success = await wfs.postTransaction(_wfs, layer, point, operation);
     if (success) {
       insertSuccessful(submission);
       return true;
