@@ -195,7 +195,8 @@ const createInsertPayload = (layer, point) => {
     xmlns:ows="http://www.opengis.net/ows"
     xmlns:wfs="http://www.opengis.net/wfs"
     xmlns:gml="http://www.opengis.net/gml"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    handle="Inserted 1 feature in '${metadata.feature_type}' via FarPoint.">
     <wfs:Insert>`;
   xml += `<${metadata.feature_type}>`;
   if (point.geometry.coordinates.length) {
@@ -250,7 +251,8 @@ const createUpdatePayload = (layer, point) => {
       xmlns:ows="http://www.opengis.net/ows"
       xmlns:wfs="http://www.opengis.net/wfs"
       xmlns:gml="http://www.opengis.net/gml"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      handle="Updated 1 feature in '${metadata.feature_type}' via FarPoint.">
       <wfs:Update typeName="${metadata.feature_type}">`;
   if (point.geometry.coordinates.length) {
     let pos;
@@ -304,8 +306,7 @@ const createDeletePayload = (layer, point) => {
   const metadata = JSON.parse(layer.metadata);
   const namespaceName = Object.keys(metadata.namespace)[0];
   const namespaceUri = metadata.namespace[namespaceName];
-  let xml =
-  `<wfs:Transaction
+  let xml = `<wfs:Transaction
       service="WFS"
       version="1.1.0"
       ${namespaceName}="${namespaceUri}"
@@ -313,7 +314,8 @@ const createDeletePayload = (layer, point) => {
       xmlns:ows="http://www.opengis.net/ows"
       xmlns:wfs="http://www.opengis.net/wfs"
       xmlns:gml="http://www.opengis.net/gml"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      handle="Deleted 1 feature in '${metadata.feature_type}' via FarPoint.">
 	  <wfs:Delete typeName="${metadata.feature_type}">
 	    <ogc:Filter>
 	      <ogc:FeatureId fid="${point.id}" />
