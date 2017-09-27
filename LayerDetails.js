@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import Mapbox, { Annotation, MapView } from 'react-native-mapbox-gl';
+import Icon from 'react-native-vector-icons/Ionicons';
 import turfInside from '@turf/inside';
 import bboxPolygon from '@turf/bbox-polygon';
 import AddFeature from './AddFeature';
@@ -27,7 +28,13 @@ Mapbox.setAccessToken(accessToken);
 
 let self;
 export default class LayerDetails extends Component {
-  state = { annotations: [], geojson: null, selectedFeature: null, editing: false };
+  state = {
+    annotations: [],
+    geojson: null,
+    selectedFeature: null,
+    editing: false,
+    trackingLocation: false,
+  };
   static navigationOptions = ({ navigation }) => ({
     title: JSON.parse(navigation.state.params.layer.metadata).Title,
     headerRight: navigation.state.params.adding ? null : (
@@ -167,9 +174,24 @@ export default class LayerDetails extends Component {
     this.setState({ selectedFeature: null });
   };
 
-  onTap = (payload) => {
+  onTap = payload => {
     this.setState({ selectedFeature: null });
-  }
+  };
+
+  onPressLocation = () => {
+    if (this.state.trackingLocation) {
+      this.setState({ trackingLocation: false });
+    } else {
+      this.setState({ trackingLocation: true });
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          this._map.setCenterCoordinate(position.coords.latitude, position.coords.longitude, false);
+        },
+        () => {},
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    }
+  };
 
   makeAnnotations = async () => {
     const { layer } = this.props.navigation.state.params;
@@ -242,6 +264,21 @@ export default class LayerDetails extends Component {
     return (
       <View style={styles.container}>
         <View style={styles.overlay} pointerEvents="box-none">
+          <View style={styles.toolbar} pointerEvents="box-none">
+            <TouchableOpacity
+              style={[
+                styles.locationButton,
+                { backgroundColor: this.state.trackingLocation ? '#4F8EF7' : 'white' },
+              ]}
+              onPress={this.onPressLocation}
+            >
+              <Icon
+                name="md-locate"
+                size={15}
+                color={this.state.trackingLocation ? 'white' : '#4F8EF7'}
+              />
+            </TouchableOpacity>
+          </View>
           {this.state.editing && (
             <View style={styles.overlay} pointerEvents="box-none">
               <View style={styles.centerOverlay} pointerEvents="none">
@@ -292,6 +329,7 @@ export default class LayerDetails extends Component {
           onOpenAnnotation={this.onOpenAnnotation}
           onRegionDidChange={this.onRegionDidChange}
           onTap={this.onTap}
+          showsUserLocation={this.state.trackingLocation}
         >
           {!!this.state.geojson &&
             !!this.state.geojson.features.length &&
@@ -395,5 +433,16 @@ const styles = StyleSheet.create({
   addBtnStyle: {
     paddingRight: 16,
     color: 'white',
+  },
+  toolbar: {
+    backgroundColor: 'rgba(0,0,0,0)',
+    padding: 8,
+  },
+  locationButton: {
+    height: 30,
+    width: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
