@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Button, Text, View, ActivityIndicator, StyleSheet, Modal, Platform } from 'react-native';
 import * as db from './db';
 import { blue, orange, gray, darkGray } from './styles';
+import { NavigationActions } from 'react-navigation';
 
 
 const styles = StyleSheet.create({
@@ -34,8 +35,14 @@ export default class WFSSettings extends Component {
     this.setState({ syncing: false });
   };
 
+  deleteWFS = async (navigate, wfs) => {
+    await db.deleteWFS(wfs);
+    navigate('Home');
+  };
+
   render() {
     const { wfs } = this.props.navigation.state.params;
+    const { navigate } = this.props.navigation;
 
     return (
       <View style={{ flex: 1, backgroundColor: 'white' }}>
@@ -51,13 +58,13 @@ export default class WFSSettings extends Component {
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
           <Button
-            onPress={() => db.deleteWFS(wfs)}
+            onPress={() => this.deleteWFS(navigate, wfs)}
             title="Delete"
             color={'#D9534F'}
             style={{ fontSize: 14 }}
           />
           <Button title='Sync' onPress={() => this.syncSubmissions(wfs)}/>
-          <Button onPress={() => db.refreshWFS(this.props.navigation.state.params.wfs)} title="Refresh" />
+          <Button onPress={() => db.refreshWFS(wfs)} title="Refresh" />
         </View>
         <Modal visible={this.state.syncing} transparent>
           <View style={styles.modalContainer}>
