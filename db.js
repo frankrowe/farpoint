@@ -57,6 +57,13 @@ export const monitor = () => {
   insertListener();
 };
 
+export const newLayer = layer => ({
+  id: uuid.v1(),
+  key: layer.layer_key,
+  metadata: JSON.stringify(layer),
+  submissions: [],
+});
+
 export const saveExchange = async (url, user, password, clientId, clientSecret) => {
   try {
     const token = await exchange.getToken(url, user, password);
@@ -71,12 +78,7 @@ export const saveExchange = async (url, user, password, clientId, clientSecret) 
         clientId,
         clientSecret,
         token: JSON.stringify(token),
-        layers: layers.map(l => ({
-          id: uuid.v1(),
-          key: l.layer_key,
-          metadata: JSON.stringify(l),
-          submissions: [],
-        })),
+        layers: layers.map(newLayer),
       });
     });
     return newWfs;
@@ -97,12 +99,7 @@ export const refreshWFS = async wfs => {
         if (existingLayer) {
           existingLayer.metadata = JSON.stringify(layer);
         } else {
-          wfs.layers.push({
-            id: uuid.v1(),
-            key: layer.layer_key,
-            metadata: JSON.stringify(layer),
-            submissions: [],
-          });
+          wfs.layers.push(newLayer(layer));
         }
       });
     });
@@ -139,9 +136,22 @@ export const saveWFS = async (wfsUrl, user, password) => {
   }
 };
 
-export const deleteWFS = wfs => {};
+export const deleteWFS = wfs => {
+  try {
+    // delete inside a transaction
+    realm.write(() => realm.delete(wfs));
+  } catch (e) {
+    console.log("Error deleting wfs", wfs);
+  }
+};
 
-export const syncWFS = wfs => {};
+export const syncWFS = wfs => {
+  let inserts = [];
+  wfs.layers.forEach(layer => {
+    inserts = inserts.concat(layer.submissions.filtered('insert_success == false').map(insert));
+  });
+  return Promise.all(inserts);
+};
 
 export const save = (layer, point, operation = 'insert') => {
   console.log('saving', layer, point, operation);
@@ -186,7 +196,6 @@ export const insert = async submission => {
 };
 
 const insertAll = () => {
-  //TODO fix
   realm.objects('WFS').forEach(wfs => {
     wfs.layers.forEach(layer => {
       layer.submissions.filtered('insert_success == false').forEach(insert);

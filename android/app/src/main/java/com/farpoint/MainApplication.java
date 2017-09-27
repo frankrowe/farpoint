@@ -27,11 +27,17 @@ public class MainApplication extends Application implements ReactApplication {
     @Override
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
+<<<<<<< HEAD
             new MainReactPackage(),
             new VectorIconsPackage(),
             new ReactNativeMapboxGLPackage(),
             new ImagePickerPackage(),
             new RealmReactPackage()
+=======
+          new MainReactPackage(),
+          new ImagePickerPackage(),
+          new RealmReactPackage()
+>>>>>>> origin/exchange-integration
       );
     }
   };
