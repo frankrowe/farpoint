@@ -4,23 +4,6 @@ import * as db from './db';
 import { blue, orange, gray, darkGray } from './styles';
 import { NavigationActions } from 'react-navigation';
 
-const styles = StyleSheet.create({
-  modalContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modal: {
-    backgroundColor: 'white',
-    width: 100,
-    height: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Platform.OS === 'ios' ? 10 : 2,
-  },
-});
-
 export default class WFSSettings extends Component {
   constructor(props) {
     super(props);
@@ -55,7 +38,10 @@ export default class WFSSettings extends Component {
   render() {
     const { wfs } = this.props.navigation.state.params;
     const { navigate } = this.props.navigation;
-
+    let submissonCount = 0;
+    wfs.layers.forEach(layer => {
+      submissonCount += layer.submissions.filtered('insert_success == false').length;
+    });
     return (
       <View style={{ flex: 1, backgroundColor: 'white' }}>
         <View
@@ -68,8 +54,8 @@ export default class WFSSettings extends Component {
         >
           <Text>{wfs.url}</Text>
         </View>
-        <View style={{}}>
-          <View style={{ padding: 8, borderBottomColor: darkGray, borderBottomWidth: 1 }}>
+        <View>
+          <View style={styles.row}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Button
                 onPress={() => this.deleteWFS(navigate, wfs)}
@@ -78,10 +64,23 @@ export default class WFSSettings extends Component {
                 style={{ width: 200, backgroundColor: 'red', alignSelf: 'flex-start' }}
               />
             </View>
-            <Text style={{ fontSize: 11, color: '#999' }}>Delete this Server.</Text>
+            <Text style={styles.note}>Delete this Server.</Text>
           </View>
-          <Button title="Sync" onPress={() => this.syncSubmissions(wfs)} />
-          <Button onPress={this.refreshWFS} title="Refresh" />
+          <View style={styles.row}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Button
+                title={`Sync (${submissonCount})`}
+                onPress={() => this.syncSubmissions(wfs)}
+              />
+            </View>
+            <Text style={styles.note}>Upload all unsynced submissions.</Text>
+          </View>
+          <View style={styles.row}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Button onPress={this.refreshWFS} title="Refresh" />
+            </View>
+            <Text style={styles.note}>Refresh Layers and Metadata for this Server.</Text>
+          </View>
         </View>
         <Modal visible={this.state.syncing} transparent>
           <View style={styles.modalContainer}>
@@ -94,3 +93,25 @@ export default class WFSSettings extends Component {
     );
   }
 }
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modal: {
+    backgroundColor: 'white',
+    width: 100,
+    height: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Platform.OS === 'ios' ? 10 : 2,
+  },
+  row: {
+    borderBottomColor: darkGray,
+    borderBottomWidth: 1,
+  },
+  note: { paddingLeft: 8, paddingBottom: 8, fontSize: 11, color: '#999' },
+});
