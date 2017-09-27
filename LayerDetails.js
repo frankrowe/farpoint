@@ -101,7 +101,7 @@ export default class LayerDetails extends Component {
   onEditLocationSave = () => {
     const { layer, wfs } = this.props.navigation.state.params;
     const operation = 'update';
-    this._map.getCenterCoordinateZoomLevel(data => {
+    this._map.getCenterCoordinateZoomLevel(async data => {
       let gj;
       if (this.state.selectedFeature.geometry.type === 'Point') {
         gj = {
@@ -120,7 +120,24 @@ export default class LayerDetails extends Component {
           },
         };
       }
-      db.save(layer, gj, operation);
+      const submission = db.save(layer, gj, operation);
+      if (submission) {
+        const insertSuccess = await db.insert(submission);
+        if (insertSuccess) {
+          // success
+          Alert.alert('Success', 'Location has been updated.', [{ text: 'OK' }]);
+        } else {
+          Alert.alert(
+            'Saved',
+            "This update was unable to be uploaded. It's been saved, and you can attempt to sync at a later time.",
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        Alert.alert('Error', 'There was an error saving this update. Please try again.', [
+          { text: 'OK' },
+        ]);
+      }
       this.setState({ editing: false, selectedFeature: null });
       this.makeAnnotations();
     });
@@ -140,32 +157,36 @@ export default class LayerDetails extends Component {
     const metadata = JSON.parse(layer.metadata);
     const featureCollection = JSON.parse(metadata.features);
     this._map.getBounds(async bounds => {
-      const bbox = bboxPolygon([bounds[1], bounds[0], bounds[3], bounds[2]]);
-      //const geojson = await wfs.getFeatures(this.props.navigation.state.params.wfs, layer, bounds);
+      //const bbox = bboxPolygon([bounds[1], bounds[0], bounds[3], bounds[2]]);
+      const featureCollection = await wfs.getFeatures(
+        this.props.navigation.state.params.wfs,
+        layer,
+        bounds
+      );
       const geojson = {
         type: 'FeatureCollection',
         features: [],
       };
       geojson.features = featureCollection.features
+        .slice(0, wfs.LIMIT)
         .filter(
           feature =>
             feature.geometry &&
             (feature.geometry.type === 'Point' || feature.geometry.type === 'MultiPoint')
-        )
-        .map(feature => {
-          if (feature.geometry.type === 'MultiPoint') {
-            return {
-              ...feature,
-              geometry: {
-                type: 'Point',
-                coordinates: feature.geometry.coordinates[0],
-              },
-            };
-          }
-          return feature;
-        })
-        .filter(feature => turfInside(feature, bbox))
-        .slice(0, wfs.LIMIT);
+        );
+      // .map(feature => {
+      //   if (feature.geometry.type === 'MultiPoint') {
+      //     return {
+      //       ...feature,
+      //       geometry: {
+      //         type: 'Point',
+      //         coordinates: feature.geometry.coordinates[0],
+      //       },
+      //     };
+      //   }
+      //   return feature;
+      // })
+      // .filter(feature => turfInside(feature, bbox));
       this.setState({ geojson });
     });
   };

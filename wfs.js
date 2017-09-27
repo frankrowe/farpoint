@@ -2,7 +2,7 @@ import { find, flattenDeep } from 'lodash';
 import { parseString } from 'xml2js';
 import base64 from 'base-64';
 
-export const LIMIT = 200;
+export const LIMIT = 100;
 
 const parseXml = xml => {
   return new Promise((resolve, reject) => {
@@ -125,6 +125,7 @@ export const getAllFeatures = async (wfsUrl, layerName, token) => {
       url += `&access_token=${token.access_token}`;
     }
     url = url.replace(/\s/g, '');
+    console.log(url);
     const response = await fetch(url);
     const json = await response.json();
     return json;

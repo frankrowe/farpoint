@@ -23,6 +23,7 @@ const WFSSettings = ({ navigation }) => (
         style={{ fontSize: 14 }}
       />
       <Button onPress={() => db.syncWFS(wfs)} title="Sync" />
+      <Button onPress={() => db.refreshWFS(navigation.state.params.wfs)} title="Refresh" />
     </View>
   </View>
 );

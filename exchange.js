@@ -31,7 +31,8 @@ const makeField = (field, idx) => ({
 
 const makeLayer = async (wfsUrl, layerName, token) => {
   const json = await getLayer(wfsUrl, layerName, token);
-  const features = await wfs.getAllFeatures(wfsUrl, layerName, token);
+  //const features = await wfs.getAllFeatures(wfsUrl, layerName, token);
+  const features = [];
   const geom = find(json.attributes, { attribute: 'wkb_geometry' });
   const geomType = geom ? geom.attribute_type : 'gml:PointPropertyType';
   return {
@@ -59,8 +60,10 @@ export const getLayers = async (wfsUrl, token) => {
       Authorization: 'Bearer ' + token.access_token,
     },
   });
+  console.log(url, 'Bearer ' + token.access_token);
   const json = await response.json();
   const layers = json.rw.map(async layerName => {
+    console.log(layerName);
     return await makeLayer(wfsUrl, layerName, token);
   });
   return await Promise.all(layers);
