@@ -13,6 +13,7 @@ const chooseType = field => {
     case 'xsd:long':
       return 'number';
     case 'xsd:dateTime':
+    case 'xsd:date':
       return 'date';
     default:
       return false;

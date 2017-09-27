@@ -55,7 +55,11 @@ class Form extends React.Component {
         Object.keys(feature.properties).forEach(field_key => {
           const field = find(schema.fields, { field_key });
           if (field) {
-            field.constraints.initial_value = feature.properties[field_key];
+            let value = feature.properties[field_key];
+            if (field.type === 'date') {
+              value = new Date(feature.properties[field_key]);
+            }
+            field.constraints.initial_value = value;
           }
         });
       }
