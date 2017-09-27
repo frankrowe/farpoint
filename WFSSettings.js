@@ -33,6 +33,7 @@ export default class WFSSettings extends Component {
             style={{ fontSize: 14 }}
           />
           <Button title='Sync' onPress={() => this.syncSubmissions(wfs)}/>
+          <Button onPress={() => db.refreshWFS(this.props.navigation.state.params.wfs)} title="Refresh" />
         </View>
       </View>
     );

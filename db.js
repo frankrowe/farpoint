@@ -1,6 +1,7 @@
 import Realm from 'realm';
 import { NetInfo } from 'react-native';
 import uuid from 'react-native-uuid';
+import { find } from 'lodash';
 import * as wfs from './wfs';
 import * as exchange from './exchange';
 
@@ -24,6 +25,7 @@ const LayerSchema = {
   primaryKey: 'id',
   properties: {
     id: 'string',
+    key: 'string',
     metadata: 'string',
     submissions: { type: 'list', objectType: 'Submission' },
     wfs: { type: 'linkingObjects', objectType: 'WFS', property: 'layers' },
@@ -71,6 +73,7 @@ export const saveExchange = async (url, user, password, clientId, clientSecret) 
         token: JSON.stringify(token),
         layers: layers.map(l => ({
           id: uuid.v1(),
+          key: l.layer_key,
           metadata: JSON.stringify(l),
           submissions: [],
         })),
@@ -79,6 +82,33 @@ export const saveExchange = async (url, user, password, clientId, clientSecret) 
     return newWfs;
   } catch (error) {
     console.log('save error', error);
+    return false;
+  }
+};
+
+export const refreshWFS = async wfs => {
+  try {
+    const token = JSON.parse(wfs.token);
+    const layers = await exchange.getLayers(wfs.url, token);
+    realm.write(() => {
+      layers.forEach(layer => {
+        const existingLayer = find(wfs.layers, { key: layer.layer_key });
+        console.log(existingLayer, layer);
+        if (existingLayer) {
+          existingLayer.metadata = JSON.stringify(layer);
+        } else {
+          wfs.layers.push({
+            id: uuid.v1(),
+            key: layer.layer_key,
+            metadata: JSON.stringify(layer),
+            submissions: [],
+          });
+        }
+      });
+    });
+    return true;
+  } catch (error) {
+    console.log('refresh error', error);
     return false;
   }
 };
@@ -120,9 +150,10 @@ export const syncWFS = wfs => {
 
 export const save = (layer, point, operation = 'insert') => {
   console.log('saving', layer, point, operation);
+  let submission;
   try {
     realm.write(() => {
-      const submission = {
+      submission = {
         id: uuid.v1(),
         operation,
         point: JSON.stringify(point),
@@ -132,14 +163,16 @@ export const save = (layer, point, operation = 'insert') => {
       layer.submissions.push(submission);
     });
     realm.write(() => {}); //trigger notif
+    return layer.submissions[layer.submissions.length - 1];
   } catch (error) {
     console.log('save error', error);
+    return false;
   }
 };
 
 // Private methods
 
-const insert = async submission => {
+export const insert = async submission => {
   console.log('inserting submission', submission);
   if (isConnected) {
     console.log(submission.point);
@@ -150,10 +183,11 @@ const insert = async submission => {
     const success = await wfs.insert(_wfs, layer, point, operation);
     if (success) {
       insertSuccessful(submission);
-      return;
+      return true;
     }
   }
   insertFailure(submission);
+  return false;
 };
 
 const insertAll = () => {
@@ -207,7 +241,7 @@ const insertListener = () => {
   realm.objects('Submission').addListener((submissions, changes) => {
     changes.insertions.forEach(async index => {
       let submission = submissions[index];
-      insert(submission);
+      //insert(submission);
     });
   });
 };
