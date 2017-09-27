@@ -57,6 +57,13 @@ export const monitor = () => {
   insertListener();
 };
 
+export const newLayer = layer => ({
+  id: uuid.v1(),
+  key: layer.layer_key,
+  metadata: JSON.stringify(l),
+  submissions: [],
+});
+
 export const saveExchange = async (url, user, password, clientId, clientSecret) => {
   try {
     const token = await exchange.getToken(url, user, password);
@@ -71,12 +78,7 @@ export const saveExchange = async (url, user, password, clientId, clientSecret) 
         clientId,
         clientSecret,
         token: JSON.stringify(token),
-        layers: layers.map(l => ({
-          id: uuid.v1(),
-          key: l.layer_key,
-          metadata: JSON.stringify(l),
-          submissions: [],
-        })),
+        layers: layers.map(newLayer),
       });
     });
     return newWfs;
@@ -97,12 +99,7 @@ export const refreshWFS = async wfs => {
         if (existingLayer) {
           existingLayer.metadata = JSON.stringify(layer);
         } else {
-          wfs.layers.push({
-            id: uuid.v1(),
-            key: layer.layer_key,
-            metadata: JSON.stringify(layer),
-            submissions: [],
-          });
+          wfs.layers.push(newLayer(layer));
         }
       });
     });
@@ -142,11 +139,15 @@ export const saveWFS = async (wfsUrl, user, password) => {
 export const deleteWFS = wfs => {};
 
 export const syncWFS = wfs => {
-  realm.objects('WFS').filtered(`url == "${wfs.url}"`).forEach(wfs => {
-    wfs.layers.forEach(layer => {
-      layer.submissions.filtered('insert_success == false').forEach(insert);
+  realm
+    .objects('WFS')
+    .filtered(`url == "${wfs.url}"`)
+    .forEach(wfs => {
+      wfs.layers.forEach(layer => {
+        layer.submissions.filtered('insert_success == false').forEach(insert);
+      });
     });
-  });};
+};
 
 export const save = (layer, point, operation = 'insert') => {
   console.log('saving', layer, point, operation);
