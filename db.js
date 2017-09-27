@@ -136,7 +136,14 @@ export const saveWFS = async (wfsUrl, user, password) => {
   }
 };
 
-export const deleteWFS = wfs => {};
+export const deleteWFS = wfs => {
+  try {
+    // delete inside a transaction
+    realm.write(() => realm.delete(wfs));
+  } catch (e) {
+    console.log("Error deleting wfs", wfs);
+  }
+};
 
 export const syncWFS = wfs => {
   let inserts = [];
