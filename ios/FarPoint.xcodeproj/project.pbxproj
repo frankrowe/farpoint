@@ -1323,6 +1323,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.boundlessgeo.farpoint;
 				PRODUCT_NAME = FarPoint;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -1350,6 +1351,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.boundlessgeo.farpoint;
 				PRODUCT_NAME = FarPoint;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
