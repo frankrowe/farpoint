@@ -3,7 +3,10 @@ package com.farpoint;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.oblador.vectoricons.VectorIconsPackage;
+import com.mapbox.reactnativemapboxgl.ReactNativeMapboxGLPackage;
 import com.imagepicker.ImagePickerPackage;
+import com.mapbox.reactnativemapboxgl.ReactNativeMapboxGLPackage;
 import io.realm.react.RealmReactPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
@@ -24,9 +27,17 @@ public class MainApplication extends Application implements ReactApplication {
     @Override
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
+<<<<<<< HEAD
+            new MainReactPackage(),
+            new VectorIconsPackage(),
+            new ReactNativeMapboxGLPackage(),
+            new ImagePickerPackage(),
+            new RealmReactPackage()
+=======
           new MainReactPackage(),
           new ImagePickerPackage(),
           new RealmReactPackage()
+>>>>>>> origin/exchange-integration
       );
     }
   };

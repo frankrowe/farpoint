@@ -160,16 +160,17 @@ export default class LayerDetails extends Component {
     navigate('Form', { layer, wfs, feature, operation });
   };
 
-  makeAnnotations = async () => {
+  makeAnnotations = async (bbox) => {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
-    const featureCollection = JSON.parse(metadata.features);
-    this._map.getBounds(async bounds => {
+    //const featureCollection = JSON.parse(metadata.features);
+
+    // this._map.getBounds(async bounds => {
       //const bbox = bboxPolygon([bounds[1], bounds[0], bounds[3], bounds[2]]);
       const featureCollection = await wfs.getFeatures(
         this.props.navigation.state.params.wfs,
         layer,
-        bounds
+        bbox
       );
       const geojson = {
         type: 'FeatureCollection',
@@ -199,15 +200,19 @@ export default class LayerDetails extends Component {
       // })
       // .filter(feature => turfInside(feature, bbox));
       this.setState({ geojson });
-    });
+    //});
+
   };
 
   zoomToLayerBounds = () => {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
-    setTimeout(() => {
-      console.log(metadata.bbox);
-      this._map.setVisibleCoordinateBounds(
+    console.log(metadata);
+
+    if(metadata){
+      setTimeout(() => {
+        console.log(metadata.bbox);
+        this._map.setVisibleCoordinateBounds(
         +metadata.bbox[1],
         +metadata.bbox[0],
         +metadata.bbox[3],
@@ -218,6 +223,7 @@ export default class LayerDetails extends Component {
         100
       );
     }, 1000);
+  }
   };
 
   componentDidMount() {
