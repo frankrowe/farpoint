@@ -40,11 +40,11 @@ class Form extends React.Component {
       } else {
         this.scform.formSubmittedOffline();
       }
+      this.setState({ submitting: false });
     } else {
       this.scform.formSubmittedError();
+      this.setState({ submitting: false });
     }
-    this.scform.formSubmitted();
-    this.setState({ submitting: false });
   }
   componentWillMount() {
     const { layer, feature } = this.props.navigation.state.params;
