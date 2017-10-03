@@ -76,6 +76,7 @@ class WFSAuth extends Component {
             value={this.state.user}
             autoCapitalize={'none'}
             autoCorrect={false}
+            underlineColorAndroid="transparent"
           />
           <Text>Password:</Text>
           <TextInput
@@ -85,6 +86,7 @@ class WFSAuth extends Component {
             autoCapitalize={'none'}
             autoCorrect={false}
             secureTextEntry
+            underlineColorAndroid="transparent"
           />
           <Text>OAuth Client ID:</Text>
             <TextInput
@@ -93,6 +95,7 @@ class WFSAuth extends Component {
               value={this.state.clientId}
               autoCapitalize={'none'}
               autoCorrect={false}
+              underlineColorAndroid="transparent"
             />
             <Text>OAuth Client Secret:</Text>
               <TextInput
@@ -101,6 +104,7 @@ class WFSAuth extends Component {
                 value={this.state.clientSecret}
                 autoCapitalize={'none'}
                 autoCorrect={false}
+                underlineColorAndroid="transparent"
               />
           <Button onPress={this.onPressAdd} title={'Add Credentials'} />
           <Button onPress={this.onPressAnon} title={'Continue without Credentials'} />
