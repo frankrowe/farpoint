@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Mapbox, { Annotation, MapView } from 'react-native-mapbox-gl';
+//import Mapbox, { Annotation, MapView } from 'react-native-mapbox-gl';
+import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import Icon from 'react-native-vector-icons/Ionicons';
 import turfInside from '@turf/inside';
 import bboxPolygon from '@turf/bbox-polygon';
@@ -24,9 +25,9 @@ import * as wfs from './wfs';
 import * as db from './db';
 
 const markerAdd = require('./marker-add.png');
-
+console.log(MapboxGL);
 const accessToken = 'pk.eyJ1IjoiZnNydyIsImEiOiJsSGQzaF8wIn0.aqDZlnSVjqRLPaDqtdnucg';
-Mapbox.setAccessToken(accessToken);
+MapboxGL.setAccessToken(accessToken);
 
 let self;
 export default class LayerDetails extends Component {
@@ -335,18 +336,8 @@ export default class LayerDetails extends Component {
             </View>
           )}
         </View>
-        <MapView
-          ref={map => {
-            this._map = map;
-          }}
-          style={styles.map}
-          annotationsAreImmutable
-          annotationsPopUpEnabled={false}
-          onRegionDidChange={this.onRegionDidChange}
-          onTap={this.onTap}
-          showsUserLocation={this.state.trackingLocation}
-        >
-          {!!this.state.geojson &&
+        <MapboxGL.MapView style={styles.map}>
+          {/*!!this.state.geojson &&
             !!this.state.geojson.features.length &&
             this.state.geojson.features.map(f => {
               let backgroundColor = 'rgba(255,65,54,0.9)';
@@ -367,8 +358,8 @@ export default class LayerDetails extends Component {
                   selected={selected}
                 />
               );
-            })}
-        </MapView>
+            })*/}
+        </MapboxGL.MapView>
         {!!this.state.selectedFeature &&
           !this.state.editing && (
             <View style={[styles.overlay, { justifyContent: 'flex-end' }]} pointerEvents="box-none">

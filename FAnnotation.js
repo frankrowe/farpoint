@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { Annotation } from 'react-native-mapbox-gl';
+//import { Annotation } from 'react-native-mapbox-gl';
 
 const DEFAULT_RADIUS = 10;
 const DEFAULT_BORDER_WIDTH = 2;
@@ -52,16 +52,21 @@ const FAnnotation = ({ feature, onOpenAnnotation, backgroundColor, radius, selec
       longitude: feature.geometry.coordinates[0],
     };
   }
+  // return (
+  //   <Annotation
+  //     id={feature.id}
+  //     coordinate={coordinate}
+  //     style={{ alignItems: 'center', justifyContent: 'center', position: 'absolute' }}
+  //   >
+  //     <TouchableOpacity onPress={() => onOpenAnnotation(feature)}>
+  //       <FAnnotationView radius={_radius} backgroundColor={_backgroundColor} selected={selected} />
+  //     </TouchableOpacity>
+  //   </Annotation>
+  // );
   return (
-    <Annotation
-      id={feature.id}
-      coordinate={coordinate}
-      style={{ alignItems: 'center', justifyContent: 'center', position: 'absolute' }}
-    >
-      <TouchableOpacity onPress={() => onOpenAnnotation(feature)}>
-        <FAnnotationView radius={_radius} backgroundColor={_backgroundColor} selected={selected} />
-      </TouchableOpacity>
-    </Annotation>
+    <TouchableOpacity onPress={() => onOpenAnnotation(feature)}>
+      <FAnnotationView radius={_radius} backgroundColor={_backgroundColor} selected={selected} />
+    </TouchableOpacity>
   );
 };
 
