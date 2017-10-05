@@ -3,79 +3,93 @@ import { Button, Image, FlatList, StyleSheet, Text, View } from 'react-native';
 import { sortBy } from 'lodash';
 import { darkGray } from './styles';
 
-const FeatureDetailsRow = ({ item }) => {
-  let value;
-  if (item.key === 'photos') {
-    if (item.value && item.value.indexOf('data:image/jpeg;base64') > -1) {
-      value = <Image style={styles.image} source={{ uri: item.value }} />;
+class FeatureDetailsRow extends React.PureComponent {
+  render() {
+    const { item } = this.props;
+    let value;
+    if (item.key === 'photos') {
+      if (item.value && item.value.indexOf('data:image/jpeg;base64') > -1) {
+        value = <Image style={styles.image} source={{ uri: item.value }} />;
+      } else {
+        value = '';
+      }
     } else {
-      value = '';
+      value = item.value;
     }
-  } else {
-    value = item.value;
-  }
-  return (
-    <View style={styles.cellRow}>
-      <Text style={styles.cellName} numberOfLines={1}>
-        {item.label}: {value}
-      </Text>
-    </View>
-  );
-};
-
-const FeatureDetails = ({
-  layer,
-  selectedFeature,
-  onEditClose,
-  onEditLocation,
-  onEditProperties,
-  onPressDelete,
-}) => {
-  const metadata = JSON.parse(layer.metadata);
-  const fields = sortBy(metadata.schema.fields, f => f.position);
-  const data = fields.map(field => {
-    const label = field.field_label;
-    const key = field.field_key;
-    const value = selectedFeature.properties[field.field_key];
-    return { key, label, value };
-  });
-  return (
-    <View style={{ flex: 0.5 }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-around',
-          borderBottomColor: darkGray,
-          borderTopColor: darkGray,
-          borderBottomWidth: 1,
-          borderTopWidth: 1,
-          backgroundColor: 'rgba(255, 255, 255, 1)',
-        }}
-      >
-        <Button onPress={onEditLocation} title="Edit Location" style={{ fontSize: 14 }} />
-        <Button onPress={onEditProperties} title="Edit Properties" style={{ fontSize: 14 }} />
-        <Button onPress={onPressDelete} title="Delete" color={'#D9534F'} style={{ fontSize: 14 }} />
+    return (
+      <View style={styles.cellRow}>
+        <Text style={styles.cellName} numberOfLines={1}>
+          {item.label}: {value}
+        </Text>
       </View>
-      <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', paddingTop: 8, flex: 1 }}>
-        <Text
+    );
+  }
+}
+
+class FeatureDetails extends React.PureComponent {
+  _keyExtractor = (item, index) => `${item.id}.${index}`;
+
+  render() {
+    const {
+      layer,
+      selectedFeature,
+      onEditClose,
+      onEditLocation,
+      onEditProperties,
+      onPressDelete,
+    } = this.props;
+    const metadata = JSON.parse(layer.metadata);
+    const fields = sortBy(metadata.schema.fields, f => f.position);
+    const data = fields.map(field => {
+      const label = field.field_label;
+      const key = field.field_key;
+      const value = selectedFeature.properties[field.field_key];
+      return { key, label, value };
+    });
+    return (
+      <View style={{ flex: 0.5 }}>
+        <View
           style={{
-            fontSize: 18,
-            fontWeight: '800',
-            paddingLeft: 16,
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+            borderBottomColor: darkGray,
+            borderTopColor: darkGray,
+            borderBottomWidth: 1,
+            borderTopWidth: 1,
+            backgroundColor: 'rgba(255, 255, 255, 1)',
+            paddingTop: 8,
+            paddingBottom: 8,
           }}
         >
-          Properties
-        </Text>
-        <FlatList
-          data={data}
-          renderItem={({ item }) => <FeatureDetailsRow item={item} />}
-          keyExtractor={item => item.key}
-          style={{}}
-        />
+          <Button onPress={onEditLocation} title="Edit Location" style={{ fontSize: 14 }} />
+          <Button onPress={onEditProperties} title="Edit Properties" style={{ fontSize: 14 }} />
+          <Button
+            onPress={onPressDelete}
+            title="Delete"
+            color={'#D9534F'}
+            style={{ fontSize: 14 }}
+          />
+        </View>
+        <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', paddingTop: 8, flex: 1 }}>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '800',
+              paddingLeft: 16,
+            }}
+          >
+            Properties
+          </Text>
+          <FlatList
+            data={data}
+            renderItem={({ item }) => <FeatureDetailsRow item={item} />}
+            keyExtractor={this._keyExtractor}
+          />
+        </View>
       </View>
-    </View>
-  );
-};
+    );
+  }
+}
 
 const styles = StyleSheet.create({
   cellName: {

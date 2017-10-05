@@ -3,6 +3,7 @@ import {
   Alert,
   Button,
   Image,
+  InteractionManager,
   FlatList,
   StyleSheet,
   Text,
@@ -13,6 +14,7 @@ import Mapbox, { Annotation, MapView } from 'react-native-mapbox-gl';
 import Icon from 'react-native-vector-icons/Ionicons';
 import turfInside from '@turf/inside';
 import bboxPolygon from '@turf/bbox-polygon';
+import { throttle, debounce } from 'lodash';
 import AddFeature from './AddFeature';
 import FeatureCount from './FeatureCount';
 import FeatureDetails from './FeatureDetails';
@@ -29,6 +31,8 @@ Mapbox.setAccessToken(accessToken);
 let self;
 export default class LayerDetails extends Component {
   state = {
+    renderPlaceholderOnly: true,
+    loading: false,
     annotations: [],
     geojson: null,
     selectedFeature: null,
@@ -54,8 +58,6 @@ export default class LayerDetails extends Component {
   }
 
   onOpenAnnotation = feature => {
-    const { navigate } = this.props.navigation;
-    const { layer, wfs } = this.props.navigation.state.params;
     this.setState({ selectedFeature: feature });
   };
 
@@ -90,9 +92,7 @@ export default class LayerDetails extends Component {
     this.props.navigation.setParams({ adding: false });
   };
 
-  onRegionDidChange = () => {
-    this.makeAnnotations();
-  };
+  onRegionDidChange = () => {};
 
   onEditClose = () => {
     this.setState({ selectedFeature: null });
@@ -199,11 +199,13 @@ export default class LayerDetails extends Component {
     const featureCollection = JSON.parse(metadata.features);
     this._map.getBounds(async bounds => {
       //const bbox = bboxPolygon([bounds[1], bounds[0], bounds[3], bounds[2]]);
+      this.setState({ loading: true });
       const featureCollection = await wfs.getFeatures(
         this.props.navigation.state.params.wfs,
         layer,
         bounds
       );
+      this.setState({ loading: false });
       const geojson = {
         type: 'FeatureCollection',
         features: [],
@@ -239,7 +241,6 @@ export default class LayerDetails extends Component {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
     setTimeout(() => {
-      console.log(metadata.bbox);
       this._map.setVisibleCoordinateBounds(
         +metadata.bbox[1],
         +metadata.bbox[0],
@@ -248,19 +249,30 @@ export default class LayerDetails extends Component {
         100,
         100,
         100,
-        100
+        100,
+        false
       );
+      this.onRegionDidChange = debounce(() => {
+        this.makeAnnotations();
+      }, 1000);
+      this.forceUpdate();
     }, 1000);
   };
 
   componentDidMount() {
-    this.zoomToLayerBounds();
-    this.makeAnnotations();
+    InteractionManager.runAfterInteractions(() => {
+      this.setState({ renderPlaceholderOnly: false }, () => {
+        this.zoomToLayerBounds();
+      });
+    });
   }
 
   render() {
     const { navigate } = this.props.navigation;
     const { layer, adding } = this.props.navigation.state.params;
+    if (this.state.renderPlaceholderOnly) {
+      return <View />;
+    }
     return (
       <View style={styles.container}>
         <View style={styles.overlay} pointerEvents="box-none">
@@ -315,7 +327,11 @@ export default class LayerDetails extends Component {
           )}
           {!!!this.state.selectedFeature && (
             <View style={styles.bottomOverlay} pointerEvents="box-none">
-              <FeatureCount geojson={this.state.geojson} limit={wfs.LIMIT} />
+              <FeatureCount
+                loading={this.state.loading}
+                geojson={this.state.geojson}
+                limit={wfs.LIMIT}
+              />
             </View>
           )}
         </View>
@@ -326,7 +342,6 @@ export default class LayerDetails extends Component {
           style={styles.map}
           annotationsAreImmutable
           annotationsPopUpEnabled={false}
-          onOpenAnnotation={this.onOpenAnnotation}
           onRegionDidChange={this.onRegionDidChange}
           onTap={this.onTap}
           showsUserLocation={this.state.trackingLocation}
@@ -341,7 +356,6 @@ export default class LayerDetails extends Component {
                 if (this.state.editing) return false;
                 backgroundColor = 'rgba(255,220,0,0.8)';
                 selected = true;
-                radius = 15;
               }
               return (
                 <FAnnotation
@@ -360,6 +374,7 @@ export default class LayerDetails extends Component {
             <View style={[styles.overlay, { justifyContent: 'flex-end' }]} pointerEvents="box-none">
               <FeatureDetails
                 layer={layer}
+                key={`${this.state.selectedFeature.id}_details`}
                 selectedFeature={this.state.selectedFeature}
                 onEditClose={this.onEditClose}
                 onEditProperties={this.onEditProperties}
