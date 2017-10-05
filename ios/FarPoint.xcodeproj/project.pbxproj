@@ -36,8 +36,9 @@
 		2DCD954D1E0B4F2C00145EB5 /* FarPointTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* FarPointTests.m */; };
 		333309EFCBE74A3686087AB3 /* libRealmReact.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EF4269CF48914120ACB70F46 /* libRealmReact.a */; };
 		33BC19EF2FFE4ACCBF0D036C /* libRNImagePicker.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 035C0904E939400B85A2A5EB /* libRNImagePicker.a */; };
-		5462E6FE1F86AC6700CE7825 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5462E6FD1F86AC6700CE7825 /* Mapbox.framework */; };
-		5462E6FF1F86AC6700CE7825 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5462E6FD1F86AC6700CE7825 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		5462E6991F86AA4C00CE7825 /* libRCTMGL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 54C3153A1F858EDE003BEF71 /* libRCTMGL.a */; };
+		54C3152C1F858EC1003BEF71 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54C3152B1F858EC1003BEF71 /* Mapbox.framework */; };
+		54C3152D1F858EC1003BEF71 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 54C3152B1F858EC1003BEF71 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		54E57F8D1F758E5D00A20E28 /* Ionicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 54E57F8C1F758E5D00A20E28 /* Ionicons.ttf */; };
 		5E9157361DD0AC6A00FF2AA8 /* libRCTAnimation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E9157331DD0AC6500FF2AA8 /* libRCTAnimation.a */; };
 		832341BD1AAA6AB300B99B32 /* libRCTText.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 832341B51AAA6A8300B99B32 /* libRCTText.a */; };
@@ -365,6 +366,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5462E6991F86AA4C00CE7825 /* libRCTMGL.a in Frameworks */,
 				ADBDB9381DFEBF1600ED6528 /* libRCTBlob.a in Frameworks */,
 				5E9157361DD0AC6A00FF2AA8 /* libRCTAnimation.a in Frameworks */,
 				146834051AC3E58100842450 /* libReact.a in Frameworks */,
