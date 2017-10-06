@@ -104,6 +104,16 @@ android {
             abiFilters "armeabi-v7a", "x86"
         }
     }
+        signingConfigs {
+        release {
+            if (project.hasProperty('FP_RELEASE_STORE_FILE')) {
+                storeFile file(FP_RELEASE_STORE_FILE)
+                storePassword FP_RELEASE_STORE_PASSWORD
+                keyAlias FP_RELEASE_KEY_ALIAS
+                keyPassword FP_RELEASE_KEY_PASSWORD
+            }
+        }
+    }
     splits {
         abi {
             reset()
@@ -116,6 +126,7 @@ android {
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            signingConfig signingConfigs.release
         }
     }
     // applicationVariants are e.g. debug, release
@@ -135,7 +146,7 @@ android {
 
 dependencies {
     compile project(':react-native-vector-icons')
-    compile project(':@mapbox/react-native-mapbox-gl')
+    compile project(':mapbox-react-native-mapbox-gl')
     compile project(':react-native-image-picker')
     compile project(':realm')
     compile fileTree(dir: "libs", include: ["*.jar"])
