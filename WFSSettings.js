@@ -56,18 +56,18 @@ export default class WFSSettings extends Component {
         </View>
         <View>
           <View style={styles.row}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={styles.button}>
               <Button
                 onPress={() => this.deleteWFS(navigate, wfs)}
                 title="Delete"
                 color={'#D9534F'}
-                style={{ width: 200, backgroundColor: 'red', alignSelf: 'flex-start' }}
+                style={{ backgroundColor: 'red' }}
               />
             </View>
             <Text style={styles.note}>Delete this Server.</Text>
           </View>
           <View style={styles.row}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={styles.button}>
               <Button
                 title={`Sync (${submissonCount})`}
                 onPress={() => this.syncSubmissions(wfs)}
@@ -76,8 +76,8 @@ export default class WFSSettings extends Component {
             <Text style={styles.note}>Upload all unsynced submissions.</Text>
           </View>
           <View style={styles.row}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Button onPress={this.refreshWFS} title="Refresh" />
+            <View style={styles.button}>
+              <Button onPress={this.refreshWFS} title="Refresh" style={styles.button} />
             </View>
             <Text style={styles.note}>Refresh Layers and Metadata for this Server.</Text>
           </View>
@@ -108,6 +108,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Platform.OS === 'ios' ? 10 : 2,
+  },
+  button: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: Platform.OS === 'ios' ? 0 : 8,
   },
   row: {
     borderBottomColor: darkGray,

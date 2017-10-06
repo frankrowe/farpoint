@@ -2,7 +2,7 @@ import { find, flattenDeep } from 'lodash';
 import { parseString } from 'xml2js';
 import base64 from 'base-64';
 
-export const LIMIT = 100;
+export const LIMIT = 50000;
 
 const parseXml = xml => {
   return new Promise((resolve, reject) => {

@@ -3,16 +3,18 @@ import {
   Alert,
   Button,
   Image,
+  InteractionManager,
   FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import Mapbox, { Annotation, MapView } from 'react-native-mapbox-gl';
+import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import Icon from 'react-native-vector-icons/Ionicons';
 import turfInside from '@turf/inside';
 import bboxPolygon from '@turf/bbox-polygon';
+import { throttle, debounce } from 'lodash';
 import AddFeature from './AddFeature';
 import FeatureCount from './FeatureCount';
 import FeatureDetails from './FeatureDetails';
@@ -21,14 +23,32 @@ import { blue, orange, lightOrange, green, gray, darkGray } from './styles';
 import * as wfs from './wfs';
 import * as db from './db';
 
-const markerAdd = require('./marker-add.png');
-
 const accessToken = 'pk.eyJ1IjoiZnNydyIsImEiOiJsSGQzaF8wIn0.aqDZlnSVjqRLPaDqtdnucg';
-Mapbox.setAccessToken(accessToken);
+MapboxGL.setAccessToken(accessToken);
+
+const layerStyles = MapboxGL.StyleSheet.create({
+  points: {
+    circleRadius: 7,
+    circleColor: '#FF4136',
+    circleOpacity: 0.9,
+    circleStrokeWidth: 2,
+    circleStrokeColor: '#fff',
+  },
+  selectedFeature: {
+    circleRadius: 7,
+    circleColor: '#FFDC00',
+    circleOpacity: 1,
+    circleStrokeWidth: 2,
+    circleStrokeColor: '#111111',
+  },
+});
 
 let self;
 export default class LayerDetails extends Component {
   state = {
+    renderPlaceholderOnly: true,
+    loading: false,
+    centerCoordinate: [0, 0],
     annotations: [],
     geojson: null,
     selectedFeature: null,
@@ -54,8 +74,6 @@ export default class LayerDetails extends Component {
   }
 
   onOpenAnnotation = feature => {
-    const { navigate } = this.props.navigation;
-    const { layer, wfs } = this.props.navigation.state.params;
     this.setState({ selectedFeature: feature });
   };
 
@@ -63,35 +81,34 @@ export default class LayerDetails extends Component {
     const { navigate } = this.props.navigation;
     const { layer, wfs } = this.props.navigation.state.params;
     this.props.navigation.setParams({ adding: false });
-    this._map.getCenterCoordinateZoomLevel(data => {
-      let feature;
-      const metadata = JSON.parse(layer.metadata);
-      if (metadata.geomType === 'gml:MultiPointPropertyType') {
-        feature = {
-          geometry: {
-            type: 'MultiPoint',
-            coordinates: [[data.longitude, data.latitude]],
-          },
-        };
-      } else if (metadata.geomType === 'gml:PointPropertyType') {
-        feature = {
-          geometry: {
-            type: 'Point',
-            coordinates: [data.longitude, data.latitude],
-          },
-        };
-      }
-      const operation = 'insert';
-      navigate('Form', { layer, wfs, feature, operation });
-    });
+
+    let feature;
+    const metadata = JSON.parse(layer.metadata);
+    if (metadata.geomType === 'gml:MultiPointPropertyType') {
+      feature = {
+        geometry: {
+          type: 'MultiPoint',
+          coordinates: [this.state.centerCoordinate],
+        },
+      };
+    } else if (metadata.geomType === 'gml:PointPropertyType') {
+      feature = {
+        geometry: {
+          type: 'Point',
+          coordinates: this.state.centerCoordinate,
+        },
+      };
+    }
+    const operation = 'insert';
+    navigate('Form', { layer, wfs, feature, operation });
   };
 
   onAddCancel = () => {
     this.props.navigation.setParams({ adding: false });
   };
 
-  onRegionDidChange = () => {
-    this.makeAnnotations();
+  onRegionDidChange = e => {
+    this.setState({ centerCoordinate: e.geometry.coordinates });
   };
 
   onEditClose = () => {
@@ -105,58 +122,58 @@ export default class LayerDetails extends Component {
     } else if (this.state.selectedFeature.geometry.type === 'MultiPoint') {
       coord = this.state.selectedFeature.geometry.coordinates[0];
     }
-    this._map.setCenterCoordinate(coord[1], coord[0], false, () => {
-      this.setState({ editing: true });
+    this.setState({
+      centerCoordinate: coord,
+      editing: true,
     });
+    this._map.flyTo(coord, 1);
   };
 
   onEditLocationCancel = () => {
     this.setState({ editing: false });
   };
 
-  onEditLocationSave = () => {
+  onEditLocationSave = async () => {
     const { layer, wfs } = this.props.navigation.state.params;
     const operation = 'update';
-    this._map.getCenterCoordinateZoomLevel(async data => {
-      let gj;
-      if (this.state.selectedFeature.geometry.type === 'Point') {
-        gj = {
-          ...this.state.selectedFeature,
-          geometry: {
-            type: 'Point',
-            coordinates: [data.longitude, data.latitude],
-          },
-        };
-      } else if (this.state.selectedFeature.geometry.type === 'MultiPoint') {
-        gj = {
-          ...this.state.selectedFeature,
-          geometry: {
-            type: 'MultiPoint',
-            coordinates: [[data.longitude, data.latitude]],
-          },
-        };
-      }
-      const submission = db.save(layer, gj, operation);
-      if (submission) {
-        const insertSuccess = await db.insert(submission);
-        if (insertSuccess) {
-          // success
-          Alert.alert('Success', 'Location has been updated.', [{ text: 'OK' }]);
-        } else {
-          Alert.alert(
-            'Saved',
-            "This update was unable to be uploaded. It's been saved, and you can attempt to sync at a later time.",
-            [{ text: 'OK' }]
-          );
-        }
+    let gj;
+    if (this.state.selectedFeature.geometry.type === 'Point') {
+      gj = {
+        ...this.state.selectedFeature,
+        geometry: {
+          type: 'Point',
+          coordinates: this.state.centerCoordinate,
+        },
+      };
+    } else if (this.state.selectedFeature.geometry.type === 'MultiPoint') {
+      gj = {
+        ...this.state.selectedFeature,
+        geometry: {
+          type: 'MultiPoint',
+          coordinates: [this.state.centerCoordinate],
+        },
+      };
+    }
+    const submission = db.save(layer, gj, operation);
+    if (submission) {
+      const insertSuccess = await db.insert(submission);
+      if (insertSuccess) {
+        // success
+        Alert.alert('Success', 'Location has been updated.', [{ text: 'OK' }]);
       } else {
-        Alert.alert('Error', 'There was an error saving this update. Please try again.', [
-          { text: 'OK' },
-        ]);
+        Alert.alert(
+          'Saved',
+          "This update was unable to be uploaded. It's been saved, and you can attempt to sync at a later time.",
+          [{ text: 'OK' }]
+        );
       }
-      this.setState({ editing: false, selectedFeature: null });
-      this.makeAnnotations();
-    });
+    } else {
+      Alert.alert('Error', 'There was an error saving this update. Please try again.', [
+        { text: 'OK' },
+      ]);
+    }
+    this.setState({ editing: false, selectedFeature: null });
+    this.makeAnnotations();
   };
 
   onEditProperties = () => {
@@ -178,6 +195,25 @@ export default class LayerDetails extends Component {
     this.setState({ selectedFeature: null });
   };
 
+  onMapPress = async e => {
+    const { screenPointX, screenPointY } = e.properties;
+
+    const featureCollection = await this._map.queryRenderedFeaturesInRect(
+      [screenPointY + 10, screenPointX + 10, screenPointY - 10, screenPointX - 10],
+      null,
+      ['pointLayer']
+    );
+    if (featureCollection.features.length) {
+      this.setState({
+        selectedFeature: featureCollection.features[0],
+      });
+    } else {
+      this.setState({
+        selectedFeature: null,
+      });
+    }
+  };
+
   onPressLocation = () => {
     if (this.state.trackingLocation) {
       this.setState({ trackingLocation: false });
@@ -185,7 +221,11 @@ export default class LayerDetails extends Component {
       this.setState({ trackingLocation: true });
       navigator.geolocation.getCurrentPosition(
         position => {
-          this._map.setCenterCoordinate(position.coords.latitude, position.coords.longitude, false);
+          this._map.setCamera({
+            centerCoordinate: [position.coords.longitude, position.coords.latitude],
+            zoomLevel: 16,
+            duration: 100,
+          });
         },
         () => {},
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
@@ -196,71 +236,43 @@ export default class LayerDetails extends Component {
   makeAnnotations = async () => {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
-    const featureCollection = JSON.parse(metadata.features);
-    this._map.getBounds(async bounds => {
-      //const bbox = bboxPolygon([bounds[1], bounds[0], bounds[3], bounds[2]]);
-      const featureCollection = await wfs.getFeatures(
-        this.props.navigation.state.params.wfs,
-        layer,
-        bounds
-      );
-      const geojson = {
-        type: 'FeatureCollection',
-        features: [],
-      };
-      if (featureCollection.features) {
-        geojson.features = featureCollection.features
-          .slice(0, wfs.LIMIT)
-          .filter(
-            feature =>
-              feature.geometry &&
-              (feature.geometry.type === 'Point' || feature.geometry.type === 'MultiPoint')
-          );
-      }
-
-      // .map(feature => {
-      //   if (feature.geometry.type === 'MultiPoint') {
-      //     return {
-      //       ...feature,
-      //       geometry: {
-      //         type: 'Point',
-      //         coordinates: feature.geometry.coordinates[0],
-      //       },
-      //     };
-      //   }
-      //   return feature;
-      // })
-      // .filter(feature => turfInside(feature, bbox));
-      this.setState({ geojson });
-    });
+    this.setState({ loading: true });
+    const featureCollection = await wfs.getFeatures(this.props.navigation.state.params.wfs, layer);
+    this.setState({ geojson: featureCollection });
   };
 
   zoomToLayerBounds = () => {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
     setTimeout(() => {
-      console.log(metadata.bbox);
-      this._map.setVisibleCoordinateBounds(
-        +metadata.bbox[1],
-        +metadata.bbox[0],
-        +metadata.bbox[3],
-        +metadata.bbox[2],
+      this._map.fitBounds(
+        [+metadata.bbox[0], +metadata.bbox[1]],
+        [+metadata.bbox[2], +metadata.bbox[3]],
         100,
-        100,
-        100,
-        100
+        0
       );
     }, 1000);
   };
 
+  onDidFinishRenderingMapFully = () => {
+    this.setState({ loading: false });
+  };
+
   componentDidMount() {
-    this.zoomToLayerBounds();
-    this.makeAnnotations();
+    InteractionManager.runAfterInteractions(() => {
+      this.setState({ renderPlaceholderOnly: false }, () => {
+        this.zoomToLayerBounds();
+        this.makeAnnotations();
+      });
+    });
   }
 
   render() {
     const { navigate } = this.props.navigation;
     const { layer, adding } = this.props.navigation.state.params;
+    if (this.state.renderPlaceholderOnly) {
+      return <View />;
+    }
     return (
       <View style={styles.container}>
         <View style={styles.overlay} pointerEvents="box-none">
@@ -303,7 +315,7 @@ export default class LayerDetails extends Component {
             <View style={styles.overlay} pointerEvents="box-none">
               <View style={styles.centerOverlay} pointerEvents="none">
                 <FAnnotationView
-                  radius={15}
+                  radius={10}
                   backgroundColor={'rgba(255,220,0,0.8)'}
                   selected={true}
                 />
@@ -315,51 +327,46 @@ export default class LayerDetails extends Component {
           )}
           {!!!this.state.selectedFeature && (
             <View style={styles.bottomOverlay} pointerEvents="box-none">
-              <FeatureCount geojson={this.state.geojson} limit={wfs.LIMIT} />
+              <FeatureCount
+                loading={this.state.loading}
+                geojson={this.state.geojson}
+                limit={wfs.LIMIT}
+              />
             </View>
           )}
         </View>
-        <MapView
+        <MapboxGL.MapView
           ref={map => {
             this._map = map;
           }}
           style={styles.map}
-          annotationsAreImmutable
-          annotationsPopUpEnabled={false}
-          onOpenAnnotation={this.onOpenAnnotation}
+          onPress={this.onMapPress}
           onRegionDidChange={this.onRegionDidChange}
-          onTap={this.onTap}
-          showsUserLocation={this.state.trackingLocation}
+          onDidFinishRenderingMapFully={this.onDidFinishRenderingMapFully}
+          showUserLocation={this.state.trackingLocation}
         >
-          {!!this.state.geojson &&
-            !!this.state.geojson.features.length &&
-            this.state.geojson.features.map(f => {
-              let backgroundColor = 'rgba(255,65,54,0.9)';
-              let selected = false;
-              let radius = 10;
-              if (this.state.selectedFeature && this.state.selectedFeature.id === f.id) {
-                if (this.state.editing) return false;
-                backgroundColor = 'rgba(255,220,0,0.8)';
-                selected = true;
-                radius = 15;
-              }
-              return (
-                <FAnnotation
-                  key={f.id}
-                  feature={f}
-                  onOpenAnnotation={this.onOpenAnnotation}
-                  backgroundColor={backgroundColor}
-                  radius={radius}
-                  selected={selected}
+          {!!this.state.geojson && (
+            <MapboxGL.ShapeSource id="pointSource" shape={this.state.geojson}>
+              <MapboxGL.CircleLayer id="pointLayer" style={layerStyles.points} />
+            </MapboxGL.ShapeSource>
+          )}
+          {!!this.state.selectedFeature &&
+            !this.state.editing && (
+              <MapboxGL.ShapeSource id="selectedFeatureSource" shape={this.state.selectedFeature}>
+                <MapboxGL.CircleLayer
+                  id="selectedFeatureFill"
+                  style={layerStyles.selectedFeature}
+                  aboveLayerID="pointLayer"
                 />
-              );
-            })}
-        </MapView>
+              </MapboxGL.ShapeSource>
+            )}
+        </MapboxGL.MapView>
         {!!this.state.selectedFeature &&
           !this.state.editing && (
             <View style={[styles.overlay, { justifyContent: 'flex-end' }]} pointerEvents="box-none">
               <FeatureDetails
                 layer={layer}
+                key={`${this.state.selectedFeature.id}_details`}
                 selectedFeature={this.state.selectedFeature}
                 onEditClose={this.onEditClose}
                 onEditProperties={this.onEditProperties}

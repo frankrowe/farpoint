@@ -3,7 +3,7 @@ package com.farpoint;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.mapbox.reactnativemapboxgl.ReactNativeMapboxGLPackage;
+import com.mapbox.rctmgl.RCTMGLPackage;
 import com.imagepicker.ImagePickerPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import io.realm.react.RealmReactPackage;
@@ -29,7 +29,7 @@ public class MainApplication extends Application implements ReactApplication {
           new MainReactPackage(),
           new ImagePickerPackage(),
           new RealmReactPackage(),
-          new ReactNativeMapboxGLPackage(),
+          new RCTMGLPackage(),
           new VectorIconsPackage()
       );
     }

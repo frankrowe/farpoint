@@ -7,7 +7,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@mapbox/react-native-mapbox-gl": "tingold/react-native-mapbox-gl#21312a3",
+    "@mapbox/react-native-mapbox-gl": "6.0.0-alpha2",
     "@turf/turf": "4.7.3",
     "base-64": "0.1.0",
     "buffer": "^5.0.7",
@@ -15,7 +15,6 @@
     "react": "16.0.0-alpha.12",
     "react-native": "0.48.3",
     "react-native-image-picker": "0.26.7",
-    "react-native-mapbox-gl": "5.2.0",
     "react-native-uuid": "1.4.9",
     "react-native-vector-icons": "^4.4.0",
     "react-navigation": "1.0.0-beta.11",
@@ -37,8 +36,6 @@
   },
   "jest": {
     "preset": "react-native",
-    "setupFiles": [
-      "./setupTests.js"
-    ]
+    "setupFiles": ["./setupTests.js"]
   }
 }
