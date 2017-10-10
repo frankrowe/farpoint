@@ -64,12 +64,12 @@ export default class FarPoint extends Component {
             <View>
               <Text style={styles.welcome}>Welcome to FarPoint</Text>
               <Text style={styles.instructions}>
-                To begin, enter the URL for your WFS enabled GIS Server:
+                To begin, enter the base URL for your Exchange:
               </Text>
             </View>
           )}
           {!empty && (
-            <Text style={styles.instructions}>Add a URL for a WFS enabled GIS Server:</Text>
+            <Text style={styles.instructions}>Add an Excange Server:</Text>
           )}
           <TextInput
             style={styles.input}
