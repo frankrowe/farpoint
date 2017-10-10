@@ -2,7 +2,7 @@ import { find, flattenDeep } from 'lodash';
 import { parseString } from 'xml2js';
 import base64 from 'base-64';
 
-export const LIMIT = 100;
+export const LIMIT = 50000;
 
 const parseXml = xml => {
   return new Promise((resolve, reject) => {
@@ -60,7 +60,6 @@ export const getCapabilities = async wfs => {
     const response = await fetch(url);
     const xml = await response.text();
     const result = await parseXml(xml);
-    console.log(result);
     const featureTypeList = result['wfs:WFS_Capabilities']['FeatureTypeList'][0][
       'FeatureType'
     ].map(f => {
@@ -88,21 +87,50 @@ export const getCapabilities = async wfs => {
 export const getFeatures = async (wfs, layer, bbox = [-90, -190, 90, 180]) => {
   const metadata = JSON.parse(layer.metadata);
   const typeName = metadata.feature_type;
-  const crs = metadata['DefaultCRS'];
-  const url = `${wfs}
+  const token = JSON.parse(wfs.token);
+  let url = `${wfs.url}/geoserver/ows
     ?service=WFS
+    &version=1.1.0
     &request=GetFeature
-    &count=${LIMIT}
+    &maxFeatures=${LIMIT}
     &typeName=${typeName}
     &outputFormat=json
     &srsName=urn:ogc:def:crs:EPSG::4326
     &bbox=${bbox.join()},urn:ogc:def:crs:EPSG::4326`;
-  console.log(url);
   try {
+    if (token && token.access_token) {
+      url += `&access_token=${token.access_token}`;
+    }
+    url = url.replace(/\s/g, '');
+    console.log(url);
     const response = await fetch(url);
     const json = await response.json();
     return json;
   } catch (error) {
+    console.log('getFeatures error', error);
+    return false;
+  }
+};
+
+export const getAllFeatures = async (wfsUrl, layerName, token) => {
+  let url = `${wfsUrl}/geoserver/ows
+    ?service=WFS
+    &version=1.1.0
+    &request=GetFeature
+    &typeName=${layerName}
+    &outputFormat=json
+    &srsName=urn:ogc:def:crs:EPSG::4326`;
+  try {
+    if (token && token.access_token) {
+      url += `&access_token=${token.access_token}`;
+    }
+    url = url.replace(/\s/g, '');
+    console.log(url);
+    const response = await fetch(url);
+    const json = await response.json();
+    return json;
+  } catch (error) {
+    console.log('getFeatures error', error);
     return false;
   }
 };
@@ -140,7 +168,6 @@ export const getFeatureType = async wfs => {
     const response = await fetch(url);
     const xml = await response.text();
     const result = await parseXml(xml);
-    console.log(result);
     const featureTypeList = await getCapabilities(wfs);
     const schemas = await parseFeatureTypes(result);
     const layers = schemas.map(layer => {
@@ -165,20 +192,26 @@ const createInsertPayload = (layer, point) => {
     service="WFS"
     version="1.1.0"
     ${namespaceName}="${namespaceUri}"
-    xmlns:geonode="http://geonode"
     xmlns:ows="http://www.opengis.net/ows"
     xmlns:wfs="http://www.opengis.net/wfs"
     xmlns:gml="http://www.opengis.net/gml"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    handle="Inserted 1 feature in '${metadata.feature_type}' via FarPoint.">
     <wfs:Insert>`;
-  xml += `<${metadata.Name}>`;
+  xml += `<${metadata.feature_type}>`;
   if (point.geometry.coordinates.length) {
-    xml += `
-          <the_geom>
-            <gml:Point srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
-              <gml:pos>${point.geometry.coordinates[0]} ${point.geometry.coordinates[1]}</gml:pos>
-            </gml:Point>
-          </the_geom>`;
+    let pos;
+    if (point.geometry.type === 'Point') {
+      pos = `${point.geometry.coordinates[0]} ${point.geometry.coordinates[1]}`;
+      xml += `<wkb_geometry>
+                  <gml:Point srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+                    <gml:pos>${pos}</gml:pos>
+                 </gml:Point>
+                </wkb_geometry>`;
+    } else if (point.geometry.type === 'MultiPoint') {
+      pos = `${point.geometry.coordinates[0][0]} ${point.geometry.coordinates[0][1]}`;
+      xml += `<wkb_geometry><gml:MultiPoint xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:4326"><gml:pointMember><gml:Point><gml:pos decimal="." cs="," ts=" ">${pos}</gml:pos></gml:Point></gml:pointMember></gml:MultiPoint></wkb_geometry>`;
+    }
   }
   xml += Object.keys(point.properties)
     .map(key => {
@@ -187,6 +220,8 @@ const createInsertPayload = (layer, point) => {
         let value = point.properties[key];
         if (field.type === 'date') {
           value = new Date(value).toISOString();
+        } else if (typeof value === 'string') {
+          value = value.replace(/&/g, '&amp;');
         }
         return `<${key}>${value}</${key}>`;
       }
@@ -195,7 +230,7 @@ const createInsertPayload = (layer, point) => {
     .join('');
 
   xml += `
-        </${metadata.Name}>
+        </${metadata.feature_type}>
       </wfs:Insert>
     </wfs:Transaction>`;
   console.log(xml);
@@ -203,6 +238,7 @@ const createInsertPayload = (layer, point) => {
 };
 
 const createUpdatePayload = (layer, point) => {
+  console.log(point);
   const metadata = JSON.parse(layer.metadata);
   const schema = metadata.schema;
   const namespaceName = Object.keys(metadata.namespace)[0];
@@ -215,31 +251,43 @@ const createUpdatePayload = (layer, point) => {
       xmlns:ows="http://www.opengis.net/ows"
       xmlns:wfs="http://www.opengis.net/wfs"
       xmlns:gml="http://www.opengis.net/gml"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-      <wfs:Update typeName="${metadata.Name}">`;
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      handle="Updated 1 feature in '${metadata.feature_type}' via FarPoint.">
+      <wfs:Update typeName="${metadata.feature_type}">`;
   if (point.geometry.coordinates.length) {
-    xml += `
-     <wfs:Property>
-        <wfs:Name>the_geom</wfs:Name>
-          <wfs:Value>
-            <gml:Point srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
-              <gml:pos>${point.geometry.coordinates[0]} ${point.geometry.coordinates[1]}</gml:pos>
-           </gml:Point>
-          </wfs:Value>
-      </wfs:Property>`;
+    let pos;
+    if (point.geometry.type === 'Point') {
+      pos = `${point.geometry.coordinates[0]} ${point.geometry.coordinates[1]}`;
+      xml += `
+           <wfs:Property>
+              <wfs:Name>wkb_geometry</wfs:Name>
+                <wfs:Value>
+                  <gml:Point srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+                    <gml:pos>${pos}</gml:pos>
+                 </gml:Point>
+                </wfs:Value>
+            </wfs:Property>`;
+    } else if (point.geometry.type === 'MultiPoint') {
+      pos = `${point.geometry.coordinates[0][0]} ${point.geometry.coordinates[0][1]}`;
+      xml += `<wfs:Property><wfs:Name>wkb_geometry</wfs:Name><wfs:Value><gml:MultiPoint xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:4326"><gml:pointMember><gml:Point><gml:pos decimal="." cs="," ts=" ">${pos}</gml:pos></gml:Point></gml:pointMember></gml:MultiPoint></wfs:Value></wfs:Property>`;
+    }
   }
   xml += Object.keys(point.properties)
     .map(key => {
       if (point.properties[key] !== null) {
         const field = find(schema.fields, { field_key: key });
-        let value = point.properties[key];
-        if (field.type === 'date') {
-          value = new Date(value).toISOString();
-        }
-        return `<wfs:Property>
+        if (field) {
+          let value = point.properties[key];
+          if (field.type === 'date') {
+            value = new Date(value).toISOString();
+          } else if (typeof value === 'string') {
+            value = value.replace(/&/g, '&amp;');
+          }
+          return `<wfs:Property>
         <wfs:Name>${key}</wfs:Name>
         <wfs:Value>${value}</wfs:Value>
         </wfs:Property>`;
+        }
       }
       return '';
     })
@@ -254,21 +302,52 @@ const createUpdatePayload = (layer, point) => {
   return xml;
 };
 
-export const insert = async (wfs, layer, point, operation = 'insert') => {
+const createDeletePayload = (layer, point) => {
+  const metadata = JSON.parse(layer.metadata);
+  const namespaceName = Object.keys(metadata.namespace)[0];
+  const namespaceUri = metadata.namespace[namespaceName];
+  let xml = `<wfs:Transaction
+      service="WFS"
+      version="1.1.0"
+      ${namespaceName}="${namespaceUri}"
+      xmlns:ogc="http://www.opengis.net/ogc"
+      xmlns:ows="http://www.opengis.net/ows"
+      xmlns:wfs="http://www.opengis.net/wfs"
+      xmlns:gml="http://www.opengis.net/gml"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      handle="Deleted 1 feature in '${metadata.feature_type}' via FarPoint.">
+	  <wfs:Delete typeName="${metadata.feature_type}">
+	    <ogc:Filter>
+	      <ogc:FeatureId fid="${point.id}" />
+	    </ogc:Filter>
+	  </wfs:Delete>
+	</wfs:Transaction>`;
+  return xml;
+};
+
+export const postTransaction = async (wfs, layer, point, operation = 'insert') => {
   try {
     let body;
     if (operation === 'insert') {
       body = createInsertPayload(layer, point);
     } else if (operation === 'update') {
       body = createUpdatePayload(layer, point);
+    } else if (operation === 'delete') {
+      body = createDeletePayload(layer, point);
     }
     const headers = {
       'Content-Type': 'text/xml',
     };
-    const wfsUrl = wfs.url;
+    const wfsUrl = wfs.url + '/geoserver/ows';
     if (wfs.user && wfs.password) {
-      headers['Authorization'] = 'Basic ' + base64.encode(wfs.user + ':' + wfs.password);
+      //headers['Authorization'] = 'Basic ' + base64.encode(wfs.user + ':' + wfs.password);
+      // Bearer: token
     }
+    const token = JSON.parse(wfs.token);
+    if (token && token.access_token) {
+      wfsUrl += `?access_token=${token.access_token}`;
+    }
+    console.log(wfsUrl);
     const request = await fetch(wfsUrl, {
       headers,
       method: 'POST',
@@ -293,6 +372,13 @@ export const insert = async (wfs, layer, point, operation = 'insert') => {
             ? summary[0]['wfs:totalUpdated'][0]
             : false;
           if (totalUpdated === '1') {
+            success = true;
+          }
+        } else if (operation === 'delete') {
+          const totalDeleted = summary[0]['wfs:totalDeleted']
+            ? summary[0]['wfs:totalDeleted'][0]
+            : false;
+          if (totalDeleted === '1') {
             success = true;
           }
         }

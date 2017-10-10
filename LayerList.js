@@ -26,6 +26,7 @@ const FormCell = props => {
 export default class LayerList extends Component {
   static navigationOptions = ({ navigation }) => ({
     title: 'Layers',
+    headerTitleStyle: { marginLeft: 'auto', marginRight: 'auto' },
     headerLeft: (
       <TouchableOpacity
         onPress={() =>

@@ -24,7 +24,7 @@ class Form extends React.Component {
     };
     this.saveForm = this.saveForm.bind(this);
   }
-  saveForm(formData) {
+  async saveForm(formData) {
     this.setState({ submitting: true });
     const { layer, feature, operation } = this.props.navigation.state.params;
     const gj = {
@@ -32,9 +32,19 @@ class Form extends React.Component {
       geometry: feature.geometry,
       properties: formData,
     };
-    db.save(layer, gj, operation);
-    this.scform.formSubmitted();
-    this.setState({ submitting: false });
+    const submission = db.save(layer, gj, operation);
+    if (submission) {
+      const insertSuccess = await db.insert(submission);
+      if (insertSuccess) {
+        this.scform.formSubmitted();
+      } else {
+        this.scform.formSubmittedOffline();
+      }
+      this.setState({ submitting: false });
+    } else {
+      this.scform.formSubmittedError();
+      this.setState({ submitting: false });
+    }
   }
   componentWillMount() {
     const { layer, feature } = this.props.navigation.state.params;
@@ -45,7 +55,11 @@ class Form extends React.Component {
         Object.keys(feature.properties).forEach(field_key => {
           const field = find(schema.fields, { field_key });
           if (field) {
-            field.constraints.initial_value = feature.properties[field_key];
+            let value = feature.properties[field_key];
+            if (field.type === 'date') {
+              value = new Date(feature.properties[field_key]);
+            }
+            field.constraints.initial_value = value;
           }
         });
       }
@@ -56,16 +70,22 @@ class Form extends React.Component {
     const { layer, feature } = this.props.navigation.state.params;
     const { SCForm } = scformschema;
     const { submitting } = this.state;
+    let coord;
+    if (feature.geometry.type === 'Point') {
+      coord = feature.geometry.coordinates;
+    } else if (feature.geometry.type === 'MultiPoint') {
+      coord = feature.geometry.coordinates[0];
+    }
     return (
       <View style={styles.container}>
         {feature &&
-        feature.geometry && (
-          <View style={styles.location}>
-            <Text>
-              Location: {feature.geometry.coordinates[1]}, {feature.geometry.coordinates[0]}
-            </Text>
-          </View>
-        )}
+          feature.geometry && (
+            <View style={styles.location}>
+              <Text>
+                Location: {coord[1]}, {coord[0]}
+              </Text>
+            </View>
+          )}
         <SCForm
           ref={scform => {
             this.scform = scform;

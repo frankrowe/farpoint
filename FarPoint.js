@@ -27,7 +27,7 @@ export default class FarPoint extends Component {
 
   state = {
     loading: true,
-    wfsInput: 'http://localhost:8080/geoserver/ows',
+    wfsInput: 'https://exchange.boundlessgeo.io',
   };
 
   onChangeText = wfsInput => {
@@ -78,6 +78,7 @@ export default class FarPoint extends Component {
             keyboardType={'url'}
             onChangeText={this.onChangeText}
             value={this.state.wfsInput}
+            underlineColorAndroid="transparent"
           />
           <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
             <Button onPress={this.onPress} title={empty ? 'Continue' : 'Add'} />

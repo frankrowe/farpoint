@@ -7,6 +7,7 @@ import {
   TouchableNativeFeedback,
   View,
 } from 'react-native';
+import * as db from './db';
 import { blue, orange, gray, darkGray, green } from './styles';
 
 const WFSCell = props => {
@@ -31,6 +32,17 @@ const WFSCell = props => {
 
 export default class WFSList extends Component {
   keyExtractor = item => item.id;
+
+  componentDidMount() {
+    db.realm.objects('Layer').addListener((layers, changes) => {
+      console.log('layer change');
+      //this.forceUpdate();
+      // changes.insertions.forEach(async index => {
+      //   let submission = submissions[index];
+      //   //insert(submission);
+      // });
+    });
+  }
 
   render() {
     const { navigate } = this.props.navigation;

@@ -1,11 +1,12 @@
 import 'react-native';
 import React from 'react';
-import * as wfs from '../wfs';
+//import * as wfs from '../wfs';
+import * as exchange from '../exchange';
 import featuretype1 from './featuretype1.json';
 import remoteschemas from './remoteschemas.json';
 
 const url = 'http://localhost:8080/geoserver/ows';
-const exchange = 'http://dev.exchange.boundlessps.com/geoserver/ows';
+const exchangeUrl = 'http://dev.exchange.boundlessps.com/geoserver/ows';
 
 // it('parses feature types', async () => {
 //   expect.assertions(1);
@@ -19,8 +20,14 @@ const exchange = 'http://dev.exchange.boundlessps.com/geoserver/ows';
 //   expect(layers.length).toBeGreaterThan(0);
 // });
 
-it('gets capabilities', async () => {
+// it('gets capabilities', async () => {
+//   expect.assertions(1);
+//   const featureTypeList = await wfs.getCapabilities(url);
+//   expect(featureTypeList.length).toBeGreaterThan(0);
+// });
+
+it('gets token', async () => {
   expect.assertions(1);
-  const featureTypeList = await wfs.getCapabilities(url);
-  expect(featureTypeList.length).toBeGreaterThan(0);
+  const token = await exchange.getToken('https://exchange.boundlessgeo.io');
+  expect(token).toBeTruthy();
 });
