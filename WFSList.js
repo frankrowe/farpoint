@@ -50,7 +50,7 @@ export default class WFSList extends Component {
     return (
       <View style={{ flex: 1 }}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>Your WFS Servers</Text>
+          <Text style={styles.title}>Your Exchange Servers</Text>
         </View>
         <FlatList
           data={wfs}
