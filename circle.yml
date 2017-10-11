@@ -5,6 +5,8 @@ dependencies:
   pre:
     - npm -g install react-native-cli
     - npm i
+    - brew install android-sdk
+
 test:
   override:
     - cd android && ./gradlew clean build assemble
