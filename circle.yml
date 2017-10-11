@@ -6,6 +6,7 @@ dependencies:
     - npm -g install react-native-cli
     - npm i
     - brew cask install android-sdk
+    - export ANDROID_HOME=/usr/local/share/android-sdk
 
 test:
   override:
