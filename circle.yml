@@ -5,7 +5,7 @@ dependencies:
   pre:
     - npm -g install react-native-cli
     - npm i
-    - brew install android-sdk
+    - brew cask install android-sdk
 
 test:
   override:
