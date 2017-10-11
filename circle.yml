@@ -11,3 +11,4 @@ dependencies:
 test:
   override:
     - cd android && ./gradlew clean build assemble
+    - cd ios && xcodebuild -scheme FarPoint build
