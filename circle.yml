@@ -7,4 +7,4 @@ dependencies:
     - npm i
 test:
   override:
-    - react-native run-android
+    - android/gradlew clean build assemble
