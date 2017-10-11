@@ -9,5 +9,5 @@ dependencies:
 
 test:
   override:
-    - cd android && ./gradlew clean compile
+    - cd android && ./gradlew clean compileDebugSources
     - cd ios && xcodebuild -scheme FarPoint build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
