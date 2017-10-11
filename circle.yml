@@ -6,9 +6,8 @@ dependencies:
     - npm -g install react-native-cli
     - npm i
     - brew cask install android-sdk
-    - export ANDROID_HOME=/usr/local/share/android-sdk
 
 test:
   override:
-    - cd android && ./gradlew clean build assemble
-    - cd ios && xcodebuild -scheme FarPoint build
+    - cd android && ./gradlew clean compile
+    - cd ios && xcodebuild -scheme FarPoint build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
