@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Button, Platform, Text, TextInput, StyleSheet, View } from 'react-native';
 import { NavigationActions } from 'react-navigation';
 import * as db from './db';
-import config from './config.json';
 import * as exchange from './exchange';
 import { blue, orange, gray, darkGray } from './styles';
 
@@ -10,8 +9,6 @@ class WFSAuth extends Component {
   state = {
     user: '',
     password: '',
-    clientId: config.client_id,
-    clientSecret: config.client_secret,
   };
 
   onChangeUser = user => {
@@ -22,24 +19,10 @@ class WFSAuth extends Component {
     this.setState({ password });
   };
 
-  onChangeClientId = clientId => {
-    this.setState({ clientId });
-  };
-
-  onChangeClientSecret = clientSecret => {
-    this.setState({ clientSecret });
-  };
-
   onPressAdd = async () => {
     const { navigate } = this.props.navigation;
     const { wfsUrl } = this.props.navigation.state.params;
-    const wfs = await db.saveExchange(
-      wfsUrl,
-      this.state.user,
-      this.state.password,
-      this.state.clientId,
-      this.state.clientSecret
-    );
+    const wfs = await db.saveExchange(wfsUrl, this.state.user, this.state.password);
     this.props.navigation.dispatch(
       NavigationActions.reset({
         index: 0,
@@ -75,7 +58,8 @@ class WFSAuth extends Component {
           <Text>{wfsUrl}</Text>
         </View>
         <View style={styles.container}>
-          <Text>Username:</Text>
+          <Text style={styles.instructions}>Login with your Exchange Credentials</Text>
+          <Text style={styles.inputLabel}>Username:</Text>
           <TextInput
             style={styles.input}
             onChangeText={this.onChangeUser}
@@ -84,7 +68,7 @@ class WFSAuth extends Component {
             autoCorrect={false}
             underlineColorAndroid="transparent"
           />
-          <Text>Password:</Text>
+          <Text style={styles.inputLabel}>Password:</Text>
           <TextInput
             style={styles.input}
             onChangeText={this.onChangePassword}
@@ -94,33 +78,8 @@ class WFSAuth extends Component {
             secureTextEntry
             underlineColorAndroid="transparent"
           />
-          <Text>OAuth Client ID:</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={this.onChangeClientId}
-            value={this.state.clientId}
-            autoCapitalize={'none'}
-            autoCorrect={false}
-            underlineColorAndroid="transparent"
-          />
-          <Text>OAuth Client Secret:</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={this.onChangeClientSecret}
-            value={this.state.clientSecret}
-            autoCapitalize={'none'}
-            autoCorrect={false}
-            underlineColorAndroid="transparent"
-          />
           <View style={styles.button}>
-            <Button onPress={this.onPressAdd} title={'Add Credentials'} style={styles.button} />
-          </View>
-          <View style={styles.button}>
-            <Button
-              onPress={this.onPressAnon}
-              title={'Continue without Credentials'}
-              style={styles.button}
-            />
+            <Button onPress={this.onPressAdd} title={'Login'} style={styles.button} />
           </View>
           <View style={styles.button}>
             <Button onPress={this.onPressCancel} title={'Cancel'} color={'#D9534F'} />
@@ -141,6 +100,12 @@ const styles = StyleSheet.create({
     borderBottomColor: darkGray,
     backgroundColor: gray,
   },
+  instructions: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 8,
+    marginBottom: 12,
+  },
   input: {
     backgroundColor: 'white',
     borderColor: 'gray',
@@ -149,10 +114,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
   },
+  inputLabel: {
+    fontSize: 12,
+  },
   button: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: Platform.OS === 'ios' ? 0 : 8,
+    marginLeft: Platform.OS === 'ios' ? -8 : 0,
   },
 });
 

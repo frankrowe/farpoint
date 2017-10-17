@@ -1,5 +1,3 @@
-config.json
-
 # Realm
 *.realm
 *.realm.lock

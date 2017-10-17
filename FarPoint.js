@@ -21,7 +21,7 @@ import { orange, gray, darkGray } from './styles';
 export default class FarPoint extends Component {
   static navigationOptions = ({ navigation }) => {
     return {
-      title: 'FarPoint',
+      title: 'Farpoint',
     };
   };
 
@@ -62,15 +62,13 @@ export default class FarPoint extends Component {
         <View style={[styles.top, empty && { flex: 1 }]}>
           {empty && (
             <View>
-              <Text style={styles.welcome}>Welcome to FarPoint</Text>
+              <Text style={styles.welcome}>Welcome to Farpoint</Text>
               <Text style={styles.instructions}>
                 To begin, enter the base URL for your Exchange:
               </Text>
             </View>
           )}
-          {!empty && (
-            <Text style={styles.instructions}>Add an Excange Server:</Text>
-          )}
+          {!empty && <Text style={styles.instructions}>Add an Exchange Server:</Text>}
           <TextInput
             style={styles.input}
             multiline
