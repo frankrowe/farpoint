@@ -1,7 +1,6 @@
 import base64 from 'base-64';
 import { find } from 'lodash';
 import * as wfs from './wfs';
-import config from './config.json';
 
 const chooseType = field => {
   if (field.attribute === 'photos') return 'photo';
@@ -96,7 +95,7 @@ export const getToken = async (wfsUrl, username, password) => {
     const headers = {
       Accept: 'application/json, application/xml, text/plain, text/html, *.*',
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: 'Basic ' + base64.encode(config.client_id + ':' + config.client_secret),
+      Authorization: 'Basic ' + base64.encode('farpoint:'),
     };
     const body = {
       grant_type: 'password',
