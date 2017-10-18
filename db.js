@@ -25,6 +25,7 @@ const LayerSchema = {
     id: 'string',
     key: 'string',
     metadata: 'string',
+    features: { type: 'list', objectType: 'Feature' },
     submissions: { type: 'list', objectType: 'Submission' },
     wfs: { type: 'linkingObjects', objectType: 'WFS', property: 'layers' },
   },
@@ -43,8 +44,19 @@ const SubmissionSchema = {
   },
 };
 
+const FeatureSchema = {
+  name: 'Feature',
+  primaryKey: 'id',
+  properties: {
+    id: 'string',
+    geojson: 'string',
+  },
+};
+
 //single exported Realm instance
-export const realm = new Realm({ schema: [WFSSchema, LayerSchema, SubmissionSchema] });
+export const realm = new Realm({
+  schema: [WFSSchema, LayerSchema, SubmissionSchema, FeatureSchema],
+});
 
 //track connection status
 let connectionType = 'none';
@@ -54,13 +66,6 @@ export const monitor = () => {
   connectionListener();
   insertListener();
 };
-
-export const newLayer = layer => ({
-  id: uuid.v1(),
-  key: layer.layer_key,
-  metadata: JSON.stringify(layer),
-  submissions: [],
-});
 
 export const saveExchange = async (url, user, password) => {
   try {
@@ -74,7 +79,7 @@ export const saveExchange = async (url, user, password) => {
         user,
         password,
         token: JSON.stringify(token),
-        layers: layers.map(newLayer),
+        layers,
       });
     });
     return newWfs;
@@ -173,26 +178,25 @@ export const save = (layer, point, operation = 'insert') => {
 export const deleteFeature = async (layer, point) => {
   const _wfs = layer.wfs[0];
   const success = await wfs.postTransaction(_wfs, layer, point, 'delete');
+  return success;
 };
 
 // Private methods
 
 export const insert = async submission => {
   console.log('inserting submission', submission);
-  if (isConnected) {
-    console.log(submission.point);
-    const point = JSON.parse(submission.point);
-    const operation = submission.operation;
-    const layer = submission.layer[0];
-    const _wfs = layer.wfs[0];
-    const success = await wfs.postTransaction(_wfs, layer, point, operation);
-    if (success) {
-      insertSuccessful(submission);
-      return true;
-    }
+  const point = JSON.parse(submission.point);
+  const operation = submission.operation;
+  const layer = submission.layer[0];
+  const _wfs = layer.wfs[0];
+  const success = await wfs.postTransaction(_wfs, layer, point, operation);
+  if (success) {
+    insertSuccessful(submission);
+    return true;
+  } else {
+    insertFailure(submission);
+    return false;
   }
-  insertFailure(submission);
-  return false;
 };
 
 const insertAll = () => {
