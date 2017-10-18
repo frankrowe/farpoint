@@ -6,7 +6,7 @@ import { darkGray } from './styles';
 
 const ImageRow = ({ uri, onImageTap }) => (
   <View>
-    <Text>Photos</Text>
+    <Text>Photos:</Text>
     <TouchableOpacity onPress={() => onImageTap(uri)}>
       <Image style={styles.image} source={{ uri }} />
     </TouchableOpacity>
@@ -25,8 +25,13 @@ const FullScreenImage = ({ uri, onImageTap }) => (
 class FeatureDetailsRow extends React.PureComponent {
   render() {
     const { item, onImageTap } = this.props;
-    let value = <Text style={styles.cellName} numberOfLines={1} />;
+    let value;
     if (item.key === 'photos') {
+      value = (
+        <Text style={styles.cellName} numberOfLines={1}>
+          Photos:
+        </Text>
+      );
       try {
         if (item.value && item.value.indexOf('data:image/jpeg;base64') == 0) {
           value = <ImageRow uri={item.value} onImageTap={onImageTap} />;
