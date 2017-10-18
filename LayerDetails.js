@@ -100,7 +100,9 @@ export default class LayerDetails extends Component {
       };
     }
     const operation = 'insert';
-    navigate('Form', { layer, wfs, feature, operation });
+    requestAnimationFrame(() => {
+      navigate('Form', { layer, wfs, feature, operation, makeAnnotations: this.makeAnnotations });
+    });
   };
 
   onAddCancel = () => {
@@ -192,11 +194,16 @@ export default class LayerDetails extends Component {
     navigate('Form', { layer, wfs, feature, operation });
   };
 
-  onPressDelete = async () => {
-    const feature = this.state.selectedFeature;
-    const layer = this.props.navigation.state.params.layer;
-    await db.deleteFeature(layer, feature);
-    this.setState({ selectedFeature: null });
+  onPressDelete = () => {
+    Alert.alert(
+      'Delete Record?',
+      'This will delete this record from your device and from Exchange.',
+      [
+        { text: 'Delete', onPress: this.deleteFeature },
+        { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
+      ],
+      { cancelable: false }
+    );
   };
 
   onMapPress = async e => {
@@ -242,7 +249,7 @@ export default class LayerDetails extends Component {
     const metadata = JSON.parse(layer.metadata);
     this.setState({ loading: true });
     const featureCollection = await wfs.getFeatures(this.props.navigation.state.params.wfs, layer);
-    this.setState({ geojson: featureCollection });
+    this.setState({ geojson: featureCollection, loading: false });
   };
 
   zoomToLayerBounds = () => {
@@ -258,8 +265,24 @@ export default class LayerDetails extends Component {
     }, 1000);
   };
 
-  onDidFinishRenderingMapFully = () => {
-    this.setState({ loading: false });
+  deleteFeature = async () => {
+    const feature = this.state.selectedFeature;
+    const layer = this.props.navigation.state.params.layer;
+    this.setState({ working: true });
+    const success = await db.deleteFeature(layer, feature);
+    this.setState({ working: false });
+    if (success) {
+      requestAnimationFrame(() => {
+        Alert.alert('Success', 'This record has been deleted', [
+          { text: 'OK', onPress: this.makeAnnotations },
+        ]);
+      });
+    } else {
+      requestAnimationFrame(() => {
+        Alert.alert('Error', 'Unable to delete. Please try again later.', [{ text: 'OK' }]);
+      });
+    }
+    this.setState({ selectedFeature: null });
   };
 
   componentDidMount() {
@@ -366,7 +389,6 @@ export default class LayerDetails extends Component {
           style={styles.map}
           onPress={this.onMapPress}
           onRegionDidChange={this.onRegionDidChange}
-          onDidFinishRenderingMapFully={this.onDidFinishRenderingMapFully}
           showUserLocation={this.state.trackingLocation}
         >
           {!!this.state.geojson && this.renderPoints()}
