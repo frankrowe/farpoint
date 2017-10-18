@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Button,
   Image,
   InteractionManager,
   FlatList,
+  Modal,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -28,16 +31,16 @@ MapboxGL.setAccessToken(accessToken);
 
 const layerStyles = MapboxGL.StyleSheet.create({
   points: {
-    circleRadius: 7,
+    circleRadius: 5,
     circleColor: '#FF4136',
     circleOpacity: 0.9,
     circleStrokeWidth: 2,
     circleStrokeColor: '#fff',
   },
   selectedFeature: {
-    circleRadius: 7,
+    circleRadius: 5,
     circleColor: '#FFDC00',
-    circleOpacity: 1,
+    circleOpacity: 0.9,
     circleStrokeWidth: 2,
     circleStrokeColor: '#111111',
   },
@@ -54,6 +57,7 @@ export default class LayerDetails extends Component {
     selectedFeature: null,
     editing: false,
     trackingLocation: false,
+    working: false,
   };
   static navigationOptions = ({ navigation }) => ({
     title: JSON.parse(navigation.state.params.layer.metadata).Title,
@@ -72,10 +76,6 @@ export default class LayerDetails extends Component {
     super(props);
     self = this;
   }
-
-  onOpenAnnotation = feature => {
-    this.setState({ selectedFeature: feature });
-  };
 
   onAddData = e => {
     const { navigate } = this.props.navigation;
@@ -154,23 +154,31 @@ export default class LayerDetails extends Component {
         },
       };
     }
+    this.setState({ working: true });
     const submission = db.save(layer, gj, operation);
     if (submission) {
       const insertSuccess = await db.insert(submission);
+      this.setState({ working: false });
       if (insertSuccess) {
-        // success
-        Alert.alert('Success', 'Location has been updated.', [{ text: 'OK' }]);
+        requestAnimationFrame(() => {
+          Alert.alert('Success', 'Location has been updated.', [{ text: 'OK' }]);
+        });
       } else {
-        Alert.alert(
-          'Saved',
-          "This update was unable to be uploaded. It's been saved, and you can attempt to sync at a later time.",
-          [{ text: 'OK' }]
-        );
+        requestAnimationFrame(() => {
+          Alert.alert(
+            'Saved',
+            "This update was unable to be uploaded. It's been saved, and you can attempt to sync at a later time.",
+            [{ text: 'OK' }]
+          );
+        });
       }
     } else {
-      Alert.alert('Error', 'There was an error saving this update. Please try again.', [
-        { text: 'OK' },
-      ]);
+      this.setState({ working: false });
+      requestAnimationFrame(() => {
+        Alert.alert('Error', 'There was an error saving this update. Please try again.', [
+          { text: 'OK' },
+        ]);
+      });
     }
     this.setState({ editing: false, selectedFeature: null });
     this.makeAnnotations();
@@ -188,10 +196,6 @@ export default class LayerDetails extends Component {
     const feature = this.state.selectedFeature;
     const layer = this.props.navigation.state.params.layer;
     await db.deleteFeature(layer, feature);
-    this.setState({ selectedFeature: null });
-  };
-
-  onTap = payload => {
     this.setState({ selectedFeature: null });
   };
 
@@ -267,6 +271,26 @@ export default class LayerDetails extends Component {
     });
   }
 
+  renderPoints() {
+    let shape;
+    if (this.state.selectedFeature) {
+      const newFeatures = this.state.geojson.features.filter(
+        f => f.id !== this.state.selectedFeature.id
+      );
+      shape = {
+        ...this.state.geojson,
+        features: newFeatures,
+      };
+    } else {
+      shape = this.state.geojson;
+    }
+    return (
+      <MapboxGL.ShapeSource id="pointSource" shape={shape}>
+        <MapboxGL.CircleLayer id="pointLayer" style={layerStyles.points} />
+      </MapboxGL.ShapeSource>
+    );
+  }
+
   render() {
     const { navigate } = this.props.navigation;
     const { layer, adding } = this.props.navigation.state.params;
@@ -295,7 +319,7 @@ export default class LayerDetails extends Component {
             <View style={styles.overlay} pointerEvents="box-none">
               <View style={styles.centerOverlay} pointerEvents="none">
                 <FAnnotationView
-                  radius={15}
+                  radius={7}
                   backgroundColor={'rgba(255,220,0,0.8)'}
                   selected={true}
                 />
@@ -315,7 +339,7 @@ export default class LayerDetails extends Component {
             <View style={styles.overlay} pointerEvents="box-none">
               <View style={styles.centerOverlay} pointerEvents="none">
                 <FAnnotationView
-                  radius={10}
+                  radius={7}
                   backgroundColor={'rgba(255,220,0,0.8)'}
                   selected={true}
                 />
@@ -345,11 +369,7 @@ export default class LayerDetails extends Component {
           onDidFinishRenderingMapFully={this.onDidFinishRenderingMapFully}
           showUserLocation={this.state.trackingLocation}
         >
-          {!!this.state.geojson && (
-            <MapboxGL.ShapeSource id="pointSource" shape={this.state.geojson}>
-              <MapboxGL.CircleLayer id="pointLayer" style={layerStyles.points} />
-            </MapboxGL.ShapeSource>
-          )}
+          {!!this.state.geojson && this.renderPoints()}
           {!!this.state.selectedFeature &&
             !this.state.editing && (
               <MapboxGL.ShapeSource id="selectedFeatureSource" shape={this.state.selectedFeature}>
@@ -375,6 +395,13 @@ export default class LayerDetails extends Component {
               />
             </View>
           )}
+        <Modal visible={this.state.working} transparent>
+          <View style={styles.modalContainer}>
+            <View style={styles.modal}>
+              <ActivityIndicator size="large" />
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -451,5 +478,19 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modal: {
+    backgroundColor: 'white',
+    width: 100,
+    height: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Platform.OS === 'ios' ? 10 : 2,
   },
 });
