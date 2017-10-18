@@ -84,20 +84,8 @@ class FeatureDetails extends React.Component {
       return <FullScreenImage uri={this.state.image} onImageTap={this.onImageTap} />;
     }
     return (
-      <View style={{ flex: 0.5 }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-            borderBottomColor: darkGray,
-            borderTopColor: darkGray,
-            borderBottomWidth: 1,
-            borderTopWidth: 1,
-            backgroundColor: 'rgba(255, 255, 255, 1)',
-            paddingTop: 8,
-            paddingBottom: 8,
-          }}
-        >
+      <View style={styles.container}>
+        <View style={styles.topbar}>
           <Button onPress={onEditLocation} title="Edit Location" style={{ fontSize: 14 }} />
           <Button onPress={onEditProperties} title="Edit Properties" style={{ fontSize: 14 }} />
           <Button
@@ -107,7 +95,7 @@ class FeatureDetails extends React.Component {
             style={{ fontSize: 14 }}
           />
         </View>
-        <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', paddingTop: 8, flex: 1 }}>
+        <View style={styles.tableContainer}>
           <Text
             style={{
               fontSize: 18,
@@ -131,6 +119,29 @@ class FeatureDetails extends React.Component {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 0.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: 'black',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  topbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderBottomColor: darkGray,
+    borderTopColor: darkGray,
+    borderBottomWidth: 1,
+    borderTopWidth: 0,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  tableContainer: {
+    flex: 1,
+    paddingTop: 8,
+  },
   cellName: {
     fontSize: 16,
     color: 'black',

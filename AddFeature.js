@@ -2,8 +2,8 @@ import React from 'react';
 import { Button, Platform, Text, View } from 'react-native';
 
 const AddFeature = ({ onAddCancel, onAddData }) => (
-  <View style={{ padding: 8, backgroundColor: 'white' }}>
-    <Text>Move marker to your desired location, then add data to your collection.</Text>
+  <View>
+    <Text>Move map to adjust location, then add data to the collection.</Text>
     <View
       style={{
         flexDirection: 'row',

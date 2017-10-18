@@ -348,8 +348,8 @@ export default class LayerDetails extends Component {
                 />
               </View>
               <View style={styles.topOverlay} pointerEvents="box-none">
-                <View style={{ padding: 8, backgroundColor: 'white' }}>
-                  <Text>Drag map to change location.</Text>
+                <View style={styles.mapOverlay}>
+                  <Text>Move map to adjust location.</Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                     <Button onPress={this.onEditLocationCancel} title="Cancel" color={'#D9534F'} />
                     <Button onPress={this.onEditLocationSave} title="Save" />
@@ -368,7 +368,9 @@ export default class LayerDetails extends Component {
                 />
               </View>
               <View style={styles.topOverlay} pointerEvents="box-none">
-                <AddFeature onAddData={this.onAddData} onAddCancel={this.onAddCancel} />
+                <View style={styles.mapOverlay}>
+                  <AddFeature onAddData={this.onAddData} onAddCancel={this.onAddCancel} />
+                </View>
               </View>
             </View>
           )}
@@ -493,6 +495,15 @@ const styles = StyleSheet.create({
   toolbar: {
     backgroundColor: 'rgba(0,0,0,0)',
     padding: 8,
+  },
+  mapOverlay: {
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    padding: 8,
+    shadowColor: 'black',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   locationButton: {
     height: 30,
