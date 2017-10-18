@@ -25,7 +25,7 @@ const FullScreenImage = ({ uri, onImageTap }) => (
 class FeatureDetailsRow extends React.PureComponent {
   render() {
     const { item, onImageTap } = this.props;
-    let value;
+    let value = <Text style={styles.cellName} numberOfLines={1} />;
     if (item.key === 'photos') {
       try {
         if (item.value && item.value.indexOf('data:image/jpeg;base64') == 0) {
@@ -35,19 +35,13 @@ class FeatureDetailsRow extends React.PureComponent {
           if (typeof uris === 'object' && uris.length) {
             uri = uris[0].replace(/"/g, '');
             value = <ImageRow uri={uri} onImageTap={onImageTap} />;
-          } else {
-            value = '';
           }
-        } else {
-          value = '';
         }
-      } catch (error) {
-        value = '';
-      }
+      } catch (error) {}
     } else {
       value = (
         <Text style={styles.cellName} numberOfLines={1}>
-          {item.label}: {value}
+          {item.label}: {item.value}
         </Text>
       );
     }
