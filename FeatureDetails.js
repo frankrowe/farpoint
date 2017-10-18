@@ -1,21 +1,37 @@
 import React from 'react';
-import { Button, Image, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Button, Image, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { sortBy } from 'lodash';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { darkGray } from './styles';
+
+const ImageRow = ({ uri, onImageTap }) => (
+  <TouchableOpacity onPress={() => onImageTap(uri)}>
+    <Image style={styles.image} source={{ uri }} />
+  </TouchableOpacity>
+);
+
+const FullScreenImage = ({ uri, onImageTap }) => (
+  <View style={{ flex: 1, backgroundColor: 'black' }}>
+    <TouchableOpacity style={styles.closeImage} onPress={() => onImageTap(false)}>
+      <Icon name="md-close" size={30} color={'white'} />
+    </TouchableOpacity>
+    <Image style={{ flex: 1 }} resizeMode="contain" source={{ uri }} />
+  </View>
+);
 
 class FeatureDetailsRow extends React.PureComponent {
   render() {
-    const { item } = this.props;
+    const { item, onImageTap } = this.props;
     let value;
     if (item.key === 'photos') {
       try {
         if (item.value && item.value.indexOf('data:image/jpeg;base64') == 0) {
-          value = <Image style={styles.image} source={{ uri: item.value }} />;
+          value = <ImageRow uri={item.value} onImageTap={onImageTap} />;
         } else if (item.value && item.value.indexOf('[') == 0) {
           let uris = JSON.parse(item.value);
           if (typeof uris === 'object' && uris.length) {
             uri = uris[0].replace(/"/g, '');
-            value = <Image style={styles.image} source={{ uri }} />;
+            value = <ImageRow uri={uri} onImageTap={onImageTap} />;
           } else {
             value = '';
           }
@@ -26,20 +42,24 @@ class FeatureDetailsRow extends React.PureComponent {
         value = '';
       }
     } else {
-      value = item.value;
-    }
-    return (
-      <View style={styles.cellRow}>
+      value = (
         <Text style={styles.cellName} numberOfLines={1}>
           {item.label}: {value}
         </Text>
-      </View>
-    );
+      );
+    }
+    return <View style={styles.cellRow}>{value}</View>;
   }
 }
 
-class FeatureDetails extends React.PureComponent {
+class FeatureDetails extends React.Component {
+  state = { image: false };
+
   _keyExtractor = (item, index) => `${item.id}.${index}`;
+
+  onImageTap = image => {
+    this.setState({ image });
+  };
 
   render() {
     const {
@@ -58,6 +78,9 @@ class FeatureDetails extends React.PureComponent {
       const value = selectedFeature.properties[field.field_key];
       return { key, label, value };
     });
+    if (this.state.image) {
+      return <FullScreenImage uri={this.state.image} onImageTap={this.onImageTap} />;
+    }
     return (
       <View style={{ flex: 0.5 }}>
         <View
@@ -94,7 +117,9 @@ class FeatureDetails extends React.PureComponent {
           </Text>
           <FlatList
             data={data}
-            renderItem={({ item }) => <FeatureDetailsRow item={item} />}
+            renderItem={({ item }) => (
+              <FeatureDetailsRow item={item} onImageTap={this.onImageTap} />
+            )}
             keyExtractor={this._keyExtractor}
           />
         </View>
@@ -127,6 +152,13 @@ const styles = StyleSheet.create({
     height: 100,
     width: 100,
     backgroundColor: 'white',
+  },
+  closeImage: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 999,
+    backgroundColor: 'rgba(0, 0, 0, 0)',
   },
 });
 
