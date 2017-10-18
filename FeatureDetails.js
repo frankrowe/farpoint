@@ -5,9 +5,12 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { darkGray } from './styles';
 
 const ImageRow = ({ uri, onImageTap }) => (
-  <TouchableOpacity onPress={() => onImageTap(uri)}>
-    <Image style={styles.image} source={{ uri }} />
-  </TouchableOpacity>
+  <View>
+    <Text>Photos</Text>
+    <TouchableOpacity onPress={() => onImageTap(uri)}>
+      <Image style={styles.image} source={{ uri }} />
+    </TouchableOpacity>
+  </View>
 );
 
 const FullScreenImage = ({ uri, onImageTap }) => (
