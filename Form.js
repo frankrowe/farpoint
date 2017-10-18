@@ -26,7 +26,7 @@ class Form extends React.Component {
   }
   async saveForm(formData) {
     this.setState({ submitting: true });
-    const { layer, feature, operation } = this.props.navigation.state.params;
+    const { layer, feature, operation, makeAnnotations } = this.props.navigation.state.params;
     const gj = {
       id: feature.id,
       geometry: feature.geometry,
@@ -36,6 +36,7 @@ class Form extends React.Component {
     if (submission) {
       const insertSuccess = await db.insert(submission);
       if (insertSuccess) {
+        makeAnnotations();
         this.scform.formSubmitted();
       } else {
         this.scform.formSubmittedOffline();
