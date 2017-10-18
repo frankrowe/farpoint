@@ -1,4 +1,5 @@
 import base64 from 'base-64';
+import uuid from 'react-native-uuid';
 import { find } from 'lodash';
 import * as wfs from './wfs';
 
@@ -33,18 +34,16 @@ const makeLayer = async (wfsUrl, layerName, token) => {
   const json = await getLayer(wfsUrl, layerName, token);
   const geom = find(json.attributes, { attribute: 'wkb_geometry' });
   const geomType = geom ? geom.attribute_type : 'gml:PointPropertyType';
-  console.log(geomType);
   if (geomType !== 'gml:PointPropertyType' && geomType !== 'gml:MultiPointPropertyType') {
     return false;
   }
-  //const features = await wfs.getAllFeatures(wfsUrl, layerName, token);
+  //const featureCollection = await wfs.getAllFeatures(wfsUrl, layerName, token);
+  //const features = featureCollection.features.map(f => ({ id: f.id, geojson: JSON.stringify(f) }));
   const features = [];
-
-  return {
+  const metadata = {
     layer_key: json.name,
     Title: json.title,
     feature_type: layerName,
-    features: JSON.stringify(features),
     geomType,
     bbox: json.bbox_string.split(','),
     namespace: { 'xmlns:geonode': 'http://geonode' },
@@ -54,6 +53,14 @@ const makeLayer = async (wfsUrl, layerName, token) => {
         .map(makeField)
         .filter(f => f.type),
     },
+  };
+
+  return {
+    id: uuid.v1(),
+    key: json.name,
+    submissions: [],
+    features,
+    metadata: JSON.stringify(metadata),
   };
 };
 
@@ -65,13 +72,11 @@ export const getLayers = async (wfsUrl, token) => {
       Authorization: 'Bearer ' + token.access_token,
     },
   });
-  console.log(url, 'Bearer ' + token.access_token);
   const json = await response.json();
   const layerPromises = json.rw.map(async layerName => {
     return await makeLayer(wfsUrl, layerName, token);
   });
   const layers = await Promise.all(layerPromises);
-  console.log(layers);
   return layers.filter(layer => layer);
 };
 
