@@ -8,9 +8,21 @@ class FeatureDetailsRow extends React.PureComponent {
     const { item } = this.props;
     let value;
     if (item.key === 'photos') {
-      if (item.value && item.value.indexOf('data:image/jpeg;base64') > -1) {
-        value = <Image style={styles.image} source={{ uri: item.value }} />;
-      } else {
+      try {
+        if (item.value && item.value.indexOf('data:image/jpeg;base64') == 0) {
+          value = <Image style={styles.image} source={{ uri: item.value }} />;
+        } else if (item.value && item.value.indexOf('[') == 0) {
+          let uris = JSON.parse(item.value);
+          if (typeof uris === 'object' && uris.length) {
+            uri = uris[0].replace(/"/g, '');
+            value = <Image style={styles.image} source={{ uri }} />;
+          } else {
+            value = '';
+          }
+        } else {
+          value = '';
+        }
+      } catch (error) {
         value = '';
       }
     } else {
