@@ -5,6 +5,12 @@ import { blue, orange, gray, darkGray } from './styles';
 import { NavigationActions } from 'react-navigation';
 
 export default class WFSSettings extends Component {
+  static navigationOptions = ({ navigation }) => {
+    return {
+      title: 'Settings',
+    };
+  };
+
   constructor(props) {
     super(props);
     this.state = { syncing: false };
@@ -16,9 +22,14 @@ export default class WFSSettings extends Component {
     this.setState({ syncing: false });
   };
 
-  deleteWFS = async (navigate, wfs) => {
-    await db.deleteObject(wfs);
-    navigate('Home');
+  deleteWFS = (navigate, wfs) => {
+    const deleted = db.deleteObject(wfs);
+    this.props.navigation.dispatch(
+      NavigationActions.reset({
+        index: 0,
+        actions: [NavigationActions.navigate({ routeName: 'Home' })],
+      })
+    );
   };
 
   refreshWFS = async () => {

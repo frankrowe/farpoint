@@ -65,9 +65,9 @@ let currentState = AppState.currentState;
 let isConnected = false;
 
 export const monitor = () => {
-  connectionListener();
   stateListener();
-  insertListener();
+  //connectionListener();
+  //insertListener();
 };
 
 export const saveExchange = async (url, user, password) => {
@@ -157,12 +157,17 @@ export const saveWFS = async (wfsUrl, user, password) => {
   }
 };
 
-export const deleteObject = async realmObject => {
+export const deleteObject = realmObject => {
   try {
-    // delete inside a transaction
-    realm.write(() => realm.delete(realmObject));
+    if (realm.isInTransaction) {
+      realm.delete(realmObject);
+    } else {
+      realm.write(() => realm.delete(realmObject));
+    }
+    return true;
   } catch (e) {
-    console.log('Error deleting', realmObject);
+    console.log('Error deleting', e);
+    return false;
   }
 };
 

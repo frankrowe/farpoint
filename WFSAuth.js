@@ -6,6 +6,12 @@ import * as exchange from './exchange';
 import { blue, orange, gray, darkGray } from './styles';
 
 class WFSAuth extends Component {
+  static navigationOptions = ({ navigation }) => {
+    return {
+      title: 'Login',
+    };
+  };
+
   state = {
     user: '',
     password: '',
@@ -31,24 +37,10 @@ class WFSAuth extends Component {
     );
   };
 
-  onPressAnon = async () => {
-    const { navigate } = this.props.navigation;
-    const { wfsUrl } = this.props.navigation.state.params;
-    const wfs = await db.saveWFS(wfsUrl, '', '');
-    this.props.navigation.dispatch(
-      NavigationActions.reset({
-        index: 0,
-        actions: [NavigationActions.navigate({ routeName: 'LayerList', params: { wfs } })],
-      })
-    );
-  };
-
   onPressCancel = () => {
     const { goBack } = this.props.navigation;
     goBack();
   };
-
-  componentDidMount() {}
 
   render() {
     const { wfsUrl } = this.props.navigation.state.params;
@@ -121,7 +113,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: Platform.OS === 'ios' ? 0 : 8,
-    marginLeft: Platform.OS === 'ios' ? -8 : 0,
+    marginLeft: -8,
   },
 });
 
