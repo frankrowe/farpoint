@@ -1,5 +1,5 @@
 import Realm from 'realm';
-import { NetInfo } from 'react-native';
+import { AppState, NetInfo } from 'react-native';
 import uuid from 'react-native-uuid';
 import { find } from 'lodash';
 import * as wfs from './wfs';
@@ -10,6 +10,7 @@ const WFSSchema = {
   primaryKey: 'id',
   properties: {
     id: 'string',
+    created: 'date',
     url: 'string',
     user: 'string',
     password: 'string',
@@ -60,10 +61,12 @@ export const realm = new Realm({
 
 //track connection status
 let connectionType = 'none';
+let currentState = AppState.currentState;
 let isConnected = false;
 
 export const monitor = () => {
   connectionListener();
+  stateListener();
   insertListener();
 };
 
@@ -75,6 +78,7 @@ export const saveExchange = async (url, user, password) => {
     realm.write(() => {
       newWfs = realm.create('WFS', {
         id: uuid.v1(),
+        created: new Date(),
         url,
         user,
         password,
@@ -87,6 +91,23 @@ export const saveExchange = async (url, user, password) => {
     console.log('save error', error);
     return false;
   }
+};
+
+export const refreshExchangeTokens = () => {
+  let instances = realm.objects('WFS');
+  instances.forEach(async wfs => {
+    let token = JSON.parse(wfs.token);
+    let created = wfs.created;
+    let dif = Math.abs(new Date().getTime() - created.getTime()) / 1000;
+    if (dif > token.expires_in) {
+      const newToken = await exchange.refreshToken(wfs);
+      if (newToken) {
+        realm.write(() => {
+          wfs.token = JSON.stringify(newToken);
+        });
+      }
+    }
+  });
 };
 
 export const refreshWFS = async wfs => {
@@ -244,6 +265,16 @@ const connectionListener = () => {
   };
   NetInfo.getConnectionInfo().then(updateConnectionInfo);
   NetInfo.addEventListener('connectionChange', updateConnectionInfo);
+};
+
+const stateListener = () => {
+  AppState.addEventListener('change', nextAppState => {
+    console.log(nextAppState);
+    if (currentState.match(/inactive|background/) && nextAppState === 'active') {
+      refreshExchangeTokens();
+    }
+    currentState = nextAppState;
+  });
 };
 
 const insertListener = () => {

@@ -45,10 +45,8 @@ export default class FarPoint extends Component {
 
   componentWillMount() {
     db.monitor();
+    db.refreshExchangeTokens();
     const wfs = db.realm.objects('WFS');
-    db.realm.addListener('change', (realm, type) => {
-      //this.forceUpdate();
-    });
     this.setState({ loading: false, wfs });
   }
 

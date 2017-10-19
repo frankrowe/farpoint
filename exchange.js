@@ -94,6 +94,32 @@ export const getLayer = async (wfsUrl, layerType, token) => {
   return json;
 };
 
+export const refreshToken = async wfs => {
+  try {
+    const url = `${wfs.url}/o/token/`;
+    const headers = {
+      Accept: 'application/json, application/xml, text/plain, text/html, *.*',
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: 'Basic ' + base64.encode('farpoint:'),
+    };
+    const token = JSON.parse(wfs.token);
+    const response = await fetch(url, {
+      headers,
+      method: 'POST',
+      body: `grant_type=refresh_token&refresh_token=${token.refresh_token}`,
+    });
+    const json = await response.json();
+    if (json.access_token) {
+      return json;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log('error', error);
+    return false;
+  }
+};
+
 export const getToken = async (wfsUrl, username, password) => {
   try {
     const url = `${wfsUrl}/o/token/`;
@@ -113,7 +139,11 @@ export const getToken = async (wfsUrl, username, password) => {
       body: `grant_type=${body.grant_type}&username=${body.username}&password=${body.password}`,
     });
     const json = await response.json();
-    return json;
+    if (json.access_token) {
+      return json;
+    } else {
+      return false;
+    }
   } catch (error) {
     console.log('error', error);
     return false;
