@@ -262,7 +262,7 @@ export default class LayerDetails extends Component {
         100,
         0
       );
-    }, 1000);
+    }, 500);
   };
 
   deleteFeature = async () => {
@@ -350,7 +350,13 @@ export default class LayerDetails extends Component {
               <View style={styles.topOverlay} pointerEvents="box-none">
                 <View style={styles.mapOverlay}>
                   <Text>Move map to adjust location.</Text>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                  <View
+                    style={{
+                      paddingTop: Platform.OS === 'android' ? 8 : 0,
+                      flexDirection: 'row',
+                      justifyContent: 'space-around',
+                    }}
+                  >
                     <Button onPress={this.onEditLocationCancel} title="Cancel" color={'#D9534F'} />
                     <Button onPress={this.onEditLocationSave} title="Save" />
                   </View>
@@ -419,7 +425,7 @@ export default class LayerDetails extends Component {
               />
             </View>
           )}
-        <Modal visible={this.state.working} transparent>
+        <Modal visible={this.state.working} transparent onRequestClose={() => {}}>
           <View style={styles.modalContainer}>
             <View style={styles.modal}>
               <ActivityIndicator size="large" />
