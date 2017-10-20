@@ -1,5 +1,6 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import scformschema from 'spatialconnect-form-schema/native';
 import { find } from 'lodash';
 import * as db from './db';
@@ -11,7 +12,7 @@ class Form extends React.Component {
     title: JSON.parse(navigation.state.params.layer.metadata).Title,
     headerRight: (
       <TouchableOpacity onPress={() => self.scform.onSubmit()}>
-        <Text style={styles.submitBtnStyle}>Submit</Text>
+        <Icon style={styles.submitBtnStyle} name="md-checkmark" size={25} color={'white'} />
       </TouchableOpacity>
     ),
   });
