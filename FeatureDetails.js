@@ -116,7 +116,7 @@ class FeatureDetails extends React.Component {
           </Text>
           <View style={styles.topbarBtns}>
             <TouchableOpacity style={styles.topbarBtn} onPress={onEditProperties}>
-              <Icon name="md-create" size={24} color={'#333'} />
+              <Icon name="md-create" size={24} color={'#4F8EF7'} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.topbarBtn} onPress={onPressDelete}>
               <Icon name="md-trash" size={24} color={'#D9534F'} />
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomColor: darkGray,
     borderTopColor: darkGray,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     borderTopWidth: 0,
     paddingTop: 8,
     paddingBottom: 8,
