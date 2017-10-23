@@ -39,7 +39,7 @@ const makeLayer = async (wfsUrl, layerName, token) => {
   }
   //const featureCollection = await wfs.getAllFeatures(wfsUrl, layerName, token);
   //const features = featureCollection.features.map(f => ({ id: f.id, geojson: JSON.stringify(f) }));
-  const features = [];
+
   const metadata = {
     layer_key: json.name,
     Title: json.title,
@@ -55,13 +55,7 @@ const makeLayer = async (wfsUrl, layerName, token) => {
     },
   };
 
-  return {
-    id: uuid.v1(),
-    key: json.name,
-    submissions: [],
-    features,
-    metadata: JSON.stringify(metadata),
-  };
+  return metadata;
 };
 
 export const getLayers = async (wfsUrl, token) => {

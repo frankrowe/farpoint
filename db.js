@@ -70,6 +70,14 @@ export const monitor = () => {
   //insertListener();
 };
 
+export const newLayer = layer => ({
+  id: uuid.v1(),
+  key: layer.layer_key,
+  metadata: JSON.stringify(layer),
+  submissions: [],
+  features: [],
+});
+
 export const saveExchange = async (url, token, user, password) => {
   try {
     const layers = await exchange.getLayers(url, token);
@@ -82,7 +90,7 @@ export const saveExchange = async (url, token, user, password) => {
         user,
         password,
         token: JSON.stringify(token),
-        layers,
+        layers: layers.map(newLayer),
       });
     });
     return newWfs;
