@@ -37,7 +37,9 @@ class Form extends React.Component {
     if (submission) {
       const insertSuccess = await db.insert(submission);
       if (insertSuccess) {
-        makeAnnotations();
+        if (makeAnnotations) {
+          makeAnnotations();
+        }
         this.scform.formSubmitted();
       } else {
         this.scform.formSubmittedOffline();

@@ -5,12 +5,9 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { darkGray } from './styles';
 
 const ImageRow = ({ uri, onImageTap }) => (
-  <View>
-    <Text>Photos:</Text>
-    <TouchableOpacity onPress={() => onImageTap(uri)}>
-      <Image style={styles.image} source={{ uri }} />
-    </TouchableOpacity>
-  </View>
+  <TouchableOpacity onPress={() => onImageTap(uri)}>
+    <Image style={styles.image} source={{ uri }} />
+  </TouchableOpacity>
 );
 
 const FullScreenImage = ({ uri, onImageTap }) => (
@@ -25,13 +22,14 @@ const FullScreenImage = ({ uri, onImageTap }) => (
 class FeatureDetailsRow extends React.PureComponent {
   render() {
     const { item, onImageTap } = this.props;
-    let value;
+    let label, value;
     if (item.key === 'photos') {
-      value = (
-        <Text style={styles.cellName} numberOfLines={1}>
-          Photos:
+      label = (
+        <Text style={styles.cellLabel} numberOfLines={1}>
+          Photos
         </Text>
       );
+      value = <Text />;
       try {
         if (item.value && item.value.indexOf('data:image/jpeg;base64') == 0) {
           value = <ImageRow uri={item.value} onImageTap={onImageTap} />;
@@ -44,13 +42,28 @@ class FeatureDetailsRow extends React.PureComponent {
         }
       } catch (error) {}
     } else {
-      value = (
-        <Text style={styles.cellName} numberOfLines={1}>
-          {item.label}: {item.value}
+      label = (
+        <Text style={styles.cellLabel} numberOfLines={1}>
+          {item.label}
         </Text>
       );
+      value = <Text style={styles.cellName}>{item.value}</Text>;
     }
-    return <View style={styles.cellRow}>{value}</View>;
+    return (
+      <View style={styles.cellRow}>
+        <View style={styles.cellRowIcon}>
+          {item.key === 'location' && (
+            <TouchableOpacity onPress={item.onEditLocation}>
+              <Icon name="md-locate" size={24} color={'#4F8EF7'} />
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={styles.cellRowContent}>
+          {label}
+          {value}
+        </View>
+      </View>
+    );
   }
 }
 
@@ -80,31 +93,37 @@ class FeatureDetails extends React.Component {
       const value = selectedFeature.properties[field.field_key];
       return { key, label, value };
     });
+    data.unshift({
+      key: 'location',
+      label: 'Location',
+      onEditLocation,
+      value: selectedFeature.geometry.coordinates.join(', '),
+    });
     if (this.state.image) {
       return <FullScreenImage uri={this.state.image} onImageTap={this.onImageTap} />;
     }
     return (
       <View style={styles.container}>
         <View style={styles.topbar}>
-          <Button onPress={onEditLocation} title="Edit Location" style={{ fontSize: 14 }} />
-          <Button onPress={onEditProperties} title="Edit Properties" style={{ fontSize: 14 }} />
-          <Button
-            onPress={onPressDelete}
-            title="Delete"
-            color={'#D9534F'}
-            style={{ fontSize: 14 }}
-          />
-        </View>
-        <View style={styles.tableContainer}>
           <Text
             style={{
               fontSize: 18,
               fontWeight: '800',
-              paddingLeft: 16,
+              lineHeight: 24,
             }}
           >
             Properties
           </Text>
+          <View style={styles.topbarBtns}>
+            <TouchableOpacity style={styles.topbarBtn} onPress={onEditProperties}>
+              <Icon name="md-create" size={24} color={'#333'} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.topbarBtn} onPress={onPressDelete}>
+              <Icon name="md-trash" size={24} color={'#D9534F'} />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.tableContainer}>
           <FlatList
             data={data}
             renderItem={({ item }) => (
@@ -130,34 +149,61 @@ const styles = StyleSheet.create({
   },
   topbar: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     borderBottomColor: darkGray,
     borderTopColor: darkGray,
     borderBottomWidth: 1,
     borderTopWidth: 0,
     paddingTop: 8,
     paddingBottom: 8,
+    paddingLeft: 16,
+    paddingRight: 16,
+  },
+  topbarBtns: {
+    flex: 0.5,
+    height: 24,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  topbarBtn: {
+    marginLeft: 16,
   },
   tableContainer: {
     flex: 1,
-    paddingTop: 8,
+  },
+  muted: {
+    color: '#999',
+  },
+  cellLabel: {
+    fontSize: 12,
+    color: '#999',
+    paddingBottom: 4,
   },
   cellName: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'black',
-    paddingBottom: 4,
   },
   cellSubtitle: {
     fontSize: 12,
     color: '#888',
   },
   cellRow: {
+    justifyContent: 'flex-start',
+    flexDirection: 'row',
+  },
+  cellRowIcon: {
+    width: 40,
+    justifyContent: 'center',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  cellRowContent: {
+    flex: 1,
     paddingTop: 8,
-    paddingBottom: 8,
+    paddingBottom: 2,
     alignItems: 'flex-start',
     justifyContent: 'center',
     flexDirection: 'column',
-    marginLeft: 16,
     borderBottomColor: darkGray,
     borderBottomWidth: 1,
   },
