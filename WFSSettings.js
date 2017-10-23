@@ -50,9 +50,11 @@ export default class WFSSettings extends Component {
     const { wfs } = this.props.navigation.state.params;
     const { navigate } = this.props.navigation;
     let submissonCount = 0;
-    wfs.layers.forEach(layer => {
-      submissonCount += layer.submissions.filtered('insert_success == false').length;
-    });
+    if (wfs.layers) {
+      wfs.layers.forEach(layer => {
+        submissonCount += layer.submissions.filtered('insert_success == false').length;
+      });
+    }
     return (
       <View style={{ flex: 1, backgroundColor: 'white' }}>
         <View
