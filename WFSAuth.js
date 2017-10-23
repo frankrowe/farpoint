@@ -1,5 +1,15 @@
 import React, { Component } from 'react';
-import { Button, Platform, Text, TextInput, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Button,
+  Modal,
+  Platform,
+  Text,
+  TextInput,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { NavigationActions } from 'react-navigation';
 import * as db from './db';
 import * as exchange from './exchange';
@@ -15,6 +25,8 @@ class WFSAuth extends Component {
   state = {
     user: '',
     password: '',
+    loading: false,
+    error: false,
   };
 
   onChangeUser = user => {
@@ -25,21 +37,39 @@ class WFSAuth extends Component {
     this.setState({ password });
   };
 
-  onPressAdd = async () => {
+  onPressLogin = async () => {
     const { navigate } = this.props.navigation;
     const { wfsUrl } = this.props.navigation.state.params;
-    const wfs = await db.saveExchange(wfsUrl, this.state.user, this.state.password);
-    this.props.navigation.dispatch(
-      NavigationActions.reset({
-        index: 0,
-        actions: [NavigationActions.navigate({ routeName: 'LayerList', params: { wfs } })],
-      })
-    );
+    this.setState({ loading: true });
+    try {
+      const token = await exchange.getToken(wfsUrl, this.state.user, this.state.password);
+      const wfs = await db.saveExchange(wfsUrl, token, this.state.user, this.state.password);
+      this.setState({ loading: false });
+      this.props.navigation.dispatch(
+        NavigationActions.reset({
+          index: 0,
+          actions: [NavigationActions.navigate({ routeName: 'LayerList', params: { wfs } })],
+        })
+      );
+    } catch (error) {
+      this.setState({ loading: false });
+      requestAnimationFrame(() => {
+        Alert.alert('Login Unsuccessful ', error.message, [{ text: 'OK' }]);
+      });
+    }
   };
 
   onPressCancel = () => {
     const { goBack } = this.props.navigation;
     goBack();
+  };
+
+  onSubmitUser = () => {
+    this._passwordInput.focus();
+  };
+
+  onSubmitPassword = () => {
+    this.onPressLogin();
   };
 
   render() {
@@ -55,28 +85,43 @@ class WFSAuth extends Component {
           <TextInput
             style={styles.input}
             onChangeText={this.onChangeUser}
+            onSubmitEditing={this.onSubmitUser}
             value={this.state.user}
             autoCapitalize={'none'}
             autoCorrect={false}
+            autoFocus
+            returnKeyType={'next'}
             underlineColorAndroid="transparent"
           />
           <Text style={styles.inputLabel}>Password:</Text>
           <TextInput
+            ref={input => {
+              this._passwordInput = input;
+            }}
             style={styles.input}
             onChangeText={this.onChangePassword}
+            onSubmitEditing={this.onSubmitPassword}
             value={this.state.password}
             autoCapitalize={'none'}
             autoCorrect={false}
+            returnKeyType={'go'}
             secureTextEntry
             underlineColorAndroid="transparent"
           />
           <View style={styles.button}>
-            <Button onPress={this.onPressAdd} title={'Login'} style={styles.button} />
+            <Button onPress={this.onPressLogin} title={'Login'} style={styles.button} />
           </View>
           <View style={styles.button}>
             <Button onPress={this.onPressCancel} title={'Cancel'} color={'#D9534F'} />
           </View>
         </View>
+        <Modal visible={this.state.loading} transparent onRequestClose={() => {}}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modal}>
+              <ActivityIndicator size="large" />
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -114,6 +159,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: Platform.OS === 'ios' ? 0 : 8,
     marginLeft: -8,
+  },
+  modalContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modal: {
+    backgroundColor: 'white',
+    width: 100,
+    height: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Platform.OS === 'ios' ? 10 : 2,
   },
 });
 

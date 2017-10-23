@@ -70,9 +70,8 @@ export const monitor = () => {
   //insertListener();
 };
 
-export const saveExchange = async (url, user, password) => {
+export const saveExchange = async (url, token, user, password) => {
   try {
-    const token = await exchange.getToken(url, user, password);
     const layers = await exchange.getLayers(url, token);
     let newWfs;
     realm.write(() => {

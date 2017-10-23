@@ -121,31 +121,33 @@ export const refreshToken = async wfs => {
 };
 
 export const getToken = async (wfsUrl, username, password) => {
+  const url = `${wfsUrl}/o/token/`;
+  const headers = {
+    Accept: 'application/json, application/xml, text/plain, text/html, *.*',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    Authorization: 'Basic ' + base64.encode('farpoint:'),
+  };
+  const body = {
+    grant_type: 'password',
+    username,
+    password,
+  };
+  let response;
   try {
-    const url = `${wfsUrl}/o/token/`;
-    const headers = {
-      Accept: 'application/json, application/xml, text/plain, text/html, *.*',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: 'Basic ' + base64.encode('farpoint:'),
-    };
-    const body = {
-      grant_type: 'password',
-      username,
-      password,
-    };
-    const response = await fetch(url, {
+    response = await fetch(url, {
       headers,
       method: 'POST',
       body: `grant_type=${body.grant_type}&username=${body.username}&password=${body.password}`,
     });
-    const json = await response.json();
-    if (json.access_token) {
-      return json;
-    } else {
-      return false;
-    }
   } catch (error) {
-    console.log('error', error);
-    return false;
+    throw new Error('Make sure the URL points to a valid Exchange instance.');
+  }
+  const json = await response.json();
+  if (json.access_token) {
+    return json;
+  } else if (json.error_description) {
+    throw new Error(json.error_description);
+  } else {
+    throw new Error('Make sure the URL points to a valid Exchange instance.');
   }
 };

@@ -71,6 +71,7 @@ export default class FarPoint extends Component {
             style={styles.input}
             multiline
             autoCapitalize={'none'}
+            autoCorrect={false}
             keyboardType={'url'}
             onChangeText={this.onChangeText}
             value={this.state.wfsInput}
