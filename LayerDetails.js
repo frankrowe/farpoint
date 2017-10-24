@@ -19,10 +19,10 @@ import MapSkin from './MapSkin';
 import turfInside from '@turf/inside';
 import bboxPolygon from '@turf/bbox-polygon';
 import { throttle, debounce } from 'lodash';
-import AddFeature from './AddFeature';
 import FeatureCount from './FeatureCount';
 import FeatureDetails from './FeatureDetails';
 import FAnnotation, { FAnnotationView } from './FAnnotation';
+import CreateMenu from './CreateMenu';
 import { blue, orange, lightOrange, green, gray, darkGray } from './styles';
 import * as wfs from './wfs';
 import * as db from './db';
@@ -383,14 +383,22 @@ export default class LayerDetails extends Component {
                 color={this.state.trackingLocation ? 'white' : '#4F8EF7'}
               />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.locationButton, { backgroundColor: orange }]}
-              onPress={() => {
-                this.setState({ adding: true });
-              }}
-            >
-              <Icon name="md-add" size={25} color={'white'} />
-            </TouchableOpacity>
+            {this.state.editing && (
+              <CreateMenu
+                adding={true}
+                onAddCancel={this.onEditLocationCancel}
+                onAddData={this.onEditLocationSave}
+                onAddToggle={() => {}}
+              />
+            )}
+            {!this.state.editing && (
+              <CreateMenu
+                adding={this.state.adding}
+                onAddCancel={this.onAddCancel}
+                onAddData={this.onAddData}
+                onAddToggle={() => this.setState({ adding: true })}
+              />
+            )}
           </View>
           {this.state.editing && (
             <View style={styles.overlay} pointerEvents="box-none">
@@ -399,17 +407,7 @@ export default class LayerDetails extends Component {
               </View>
               <View style={styles.topOverlay} pointerEvents="box-none">
                 <View style={styles.mapOverlay}>
-                  <Text>Move map to adjust location.</Text>
-                  <View
-                    style={{
-                      paddingTop: Platform.OS === 'android' ? 8 : 0,
-                      flexDirection: 'row',
-                      justifyContent: 'space-around',
-                    }}
-                  >
-                    <Button onPress={this.onEditLocationCancel} title="Cancel" color={'#D9534F'} />
-                    <Button onPress={this.onEditLocationSave} title="Save" />
-                  </View>
+                  <Text>Move map to adjust location of this record.</Text>
                 </View>
               </View>
             </View>
@@ -421,7 +419,7 @@ export default class LayerDetails extends Component {
               </View>
               <View style={styles.topOverlay} pointerEvents="box-none">
                 <View style={styles.mapOverlay}>
-                  <AddFeature onAddData={this.onAddData} onAddCancel={this.onAddCancel} />
+                  <Text>Move map to adjust location of the new record.</Text>
                 </View>
               </View>
             </View>
@@ -543,6 +541,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     bottom: 50,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
   },
   mapOverlay: {
     backgroundColor: 'rgba(255,255,255,0.9)',
