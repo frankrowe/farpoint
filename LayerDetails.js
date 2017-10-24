@@ -28,7 +28,7 @@ import * as wfs from './wfs';
 import * as db from './db';
 
 const accessToken =
-  'pk.eyJ1IjoiYm91bmRsZXNzIiwiYSI6ImNpcWpxcHJ1NjBiNW9mbm5lYzl4bDM5d2IifQ.vGfRqjw1fHKjZNGapH9EPA';
+  'sk.eyJ1IjoiYm91bmRsZXNzIiwiYSI6ImNqOTV0Ym50ZjRsYWozM241c3JxOTJkZzcifQ.MgzQw0Pab-97VfWFfYzOpg';
 MapboxGL.setAccessToken(accessToken);
 
 const layerStyles = MapboxGL.StyleSheet.create({
