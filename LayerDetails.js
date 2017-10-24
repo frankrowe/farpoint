@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import Icon from 'react-native-vector-icons/Ionicons';
+import MapSkin from './MapSkin';
 import turfInside from '@turf/inside';
 import bboxPolygon from '@turf/bbox-polygon';
 import { throttle, debounce } from 'lodash';
@@ -51,6 +52,7 @@ export default class LayerDetails extends Component {
   state = {
     renderPlaceholderOnly: true,
     loading: false,
+    adding: false,
     centerCoordinate: [0, 0],
     annotations: [],
     geojson: null,
@@ -58,20 +60,13 @@ export default class LayerDetails extends Component {
     editing: false,
     trackingLocation: false,
     working: false,
+    useSatellite: false,
   };
+
   static navigationOptions = ({ navigation }) => ({
     title: JSON.parse(navigation.state.params.layer.metadata).Title,
-    headerRight: navigation.state.params.adding ? null : (
-      <TouchableOpacity
-        onPress={() => {
-          self.setState({ selectedFeature: null });
-          navigation.setParams({ adding: true });
-        }}
-      >
-        <Text style={styles.addBtnStyle}>Add</Text>
-      </TouchableOpacity>
-    ),
   });
+
   constructor(props) {
     super(props);
     self = this;
@@ -80,7 +75,7 @@ export default class LayerDetails extends Component {
   onAddData = e => {
     const { navigate } = this.props.navigation;
     const { layer, wfs } = this.props.navigation.state.params;
-    this.props.navigation.setParams({ adding: false });
+    this.setState({ adding: false });
 
     let feature;
     const metadata = JSON.parse(layer.metadata);
@@ -106,7 +101,7 @@ export default class LayerDetails extends Component {
   };
 
   onAddCancel = () => {
-    this.props.navigation.setParams({ adding: false });
+    this.setState({ adding: false });
   };
 
   onRegionDidChange = e => {
@@ -191,7 +186,7 @@ export default class LayerDetails extends Component {
     const { layer, wfs } = this.props.navigation.state.params;
     const feature = this.state.selectedFeature;
     const operation = 'update';
-    navigate('Form', { layer, wfs, feature, operation });
+    navigate('Form', { layer, wfs, feature, operation, makeAnnotations: this.makeAnnotations });
   };
 
   onPressDelete = () => {
@@ -242,6 +237,10 @@ export default class LayerDetails extends Component {
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
       );
     }
+  };
+
+  onPressSatellite = () => {
+    this.setState({ useSatellite: !this.state.useSatellite });
   };
 
   makeAnnotations = async () => {
@@ -316,7 +315,8 @@ export default class LayerDetails extends Component {
 
   render() {
     const { navigate } = this.props.navigation;
-    const { layer, adding } = this.props.navigation.state.params;
+    const { layer } = this.props.navigation.state.params;
+    const { adding } = this.state;
     if (this.state.renderPlaceholderOnly) {
       return <View />;
     }
@@ -327,15 +327,36 @@ export default class LayerDetails extends Component {
             <TouchableOpacity
               style={[
                 styles.locationButton,
+                { backgroundColor: this.state.useSatellite ? '#4F8EF7' : 'white' },
+              ]}
+              onPress={this.onPressSatellite}
+            >
+              <MapSkin
+                name="ms-satellite"
+                color={this.state.useSatellite ? 'white' : '#4F8EF7'}
+                size={25}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.locationButton,
                 { backgroundColor: this.state.trackingLocation ? '#4F8EF7' : 'white' },
               ]}
               onPress={this.onPressLocation}
             >
               <Icon
                 name="md-locate"
-                size={15}
+                size={20}
                 color={this.state.trackingLocation ? 'white' : '#4F8EF7'}
               />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.locationButton, { backgroundColor: orange }]}
+              onPress={() => {
+                this.setState({ adding: true });
+              }}
+            >
+              <Icon name="md-add" size={25} color={'white'} />
             </TouchableOpacity>
           </View>
           {this.state.editing && (
@@ -394,6 +415,9 @@ export default class LayerDetails extends Component {
           ref={map => {
             this._map = map;
           }}
+          styleURL={
+            this.state.useSatellite ? MapboxGL.StyleURL.SatelliteStreet : MapboxGL.StyleURL.Street
+          }
           style={styles.map}
           onPress={this.onMapPress}
           onRegionDidChange={this.onRegionDidChange}
@@ -499,8 +523,11 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   toolbar: {
-    backgroundColor: 'rgba(0,0,0,0)',
+    backgroundColor: 'rgba(0,255,0,0)',
     padding: 8,
+    position: 'absolute',
+    right: 0,
+    bottom: 50,
   },
   mapOverlay: {
     backgroundColor: 'rgba(255,255,255,0.9)',
@@ -512,11 +539,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   locationButton: {
-    height: 30,
-    width: 30,
-    borderRadius: 15,
+    height: 40,
+    width: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 8,
   },
   modalContainer: {
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
