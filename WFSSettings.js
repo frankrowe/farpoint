@@ -82,6 +82,7 @@ export default class WFSSettings extends Component {
           <View style={styles.row}>
             <View style={styles.button}>
               <Button
+                color={orange}
                 title={`Sync (${submissonCount})`}
                 onPress={() => this.syncSubmissions(wfs)}
               />
@@ -90,7 +91,12 @@ export default class WFSSettings extends Component {
           </View>
           <View style={styles.row}>
             <View style={styles.button}>
-              <Button onPress={this.refreshWFS} title="Refresh" style={styles.button} />
+              <Button
+                color={orange}
+                onPress={this.refreshWFS}
+                title="Refresh"
+                style={styles.button}
+              />
             </View>
             <Text style={styles.note}>Refresh Layers and Metadata for this Server.</Text>
           </View>

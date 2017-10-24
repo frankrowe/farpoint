@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import scformschema from 'spatialconnect-form-schema/native';
 import { find } from 'lodash';
 import * as db from './db';
-import { gray, darkGray } from './styles';
+import { orange, gray, darkGray } from './styles';
 
 let self;
 class Form extends React.Component {
@@ -109,7 +109,6 @@ const styles = StyleSheet.create({
   },
   submitBtnStyle: {
     paddingRight: 16,
-    color: 'white',
   },
   location: {
     padding: 8,

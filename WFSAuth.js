@@ -109,10 +109,12 @@ class WFSAuth extends Component {
             underlineColorAndroid="transparent"
           />
           <View style={styles.button}>
-            <Button onPress={this.onPressLogin} title={'Login'} style={styles.button} />
-          </View>
-          <View style={styles.button}>
-            <Button onPress={this.onPressCancel} title={'Cancel'} color={'#D9534F'} />
+            <Button
+              onPress={this.onPressLogin}
+              title={'Login'}
+              style={styles.button}
+              color={orange}
+            />
           </View>
         </View>
         <Modal visible={this.state.loading} transparent onRequestClose={() => {}}>

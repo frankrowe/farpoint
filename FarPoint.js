@@ -78,7 +78,7 @@ export default class FarPoint extends Component {
             underlineColorAndroid="transparent"
           />
           <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-            <Button onPress={this.onPress} title={empty ? 'Continue' : 'Add'} />
+            <Button color={orange} onPress={this.onPress} title={empty ? 'Continue' : 'Add'} />
           </View>
         </View>
         {!empty && (

@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Image, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { sortBy } from 'lodash';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { darkGray } from './styles';
+import { darkGray, orange } from './styles';
 
 const ImageRow = ({ uri, onImageTap }) => (
   <TouchableOpacity onPress={() => onImageTap(uri)}>
@@ -54,7 +54,7 @@ class FeatureDetailsRow extends React.PureComponent {
         <View style={styles.cellRowIcon}>
           {item.key === 'location' && (
             <TouchableOpacity onPress={item.onEditLocation}>
-              <Icon name="md-locate" size={24} color={'#4F8EF7'} />
+              <Icon name="md-locate" size={24} color={orange} />
             </TouchableOpacity>
           )}
         </View>
@@ -116,7 +116,7 @@ class FeatureDetails extends React.Component {
           </Text>
           <View style={styles.topbarBtns}>
             <TouchableOpacity style={styles.topbarBtn} onPress={onEditProperties}>
-              <Icon name="md-create" size={24} color={'#4F8EF7'} />
+              <Icon name="md-create" size={24} color={orange} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.topbarBtn} onPress={onPressDelete}>
               <Icon name="md-trash" size={24} color={'#D9534F'} />
