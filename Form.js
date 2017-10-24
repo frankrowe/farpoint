@@ -36,6 +36,7 @@ class Form extends React.Component {
     const submission = db.save(layer, gj, operation);
     if (submission) {
       const insertSuccess = await db.insert(submission);
+      this.setState({ submitting: false });
       if (insertSuccess) {
         if (makeAnnotations) {
           makeAnnotations();
@@ -44,10 +45,8 @@ class Form extends React.Component {
       } else {
         this.scform.formSubmittedOffline();
       }
-      this.setState({ submitting: false });
     } else {
       this.scform.formSubmittedError();
-      this.setState({ submitting: false });
     }
   }
   componentWillMount() {
