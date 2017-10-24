@@ -27,7 +27,8 @@ import { blue, orange, lightOrange, green, gray, darkGray } from './styles';
 import * as wfs from './wfs';
 import * as db from './db';
 
-const accessToken = 'pk.eyJ1IjoiZnNydyIsImEiOiJsSGQzaF8wIn0.aqDZlnSVjqRLPaDqtdnucg';
+const accessToken =
+  'pk.eyJ1IjoiYm91bmRsZXNzIiwiYSI6ImNpcWpxcHJ1NjBiNW9mbm5lYzl4bDM5d2IifQ.vGfRqjw1fHKjZNGapH9EPA';
 MapboxGL.setAccessToken(accessToken);
 
 const layerStyles = MapboxGL.StyleSheet.create({
@@ -210,12 +211,32 @@ export default class LayerDetails extends Component {
       ['pointLayer']
     );
     if (featureCollection.features.length) {
+      const features = this.state.geojson.features.map(f => {
+        if (f.id === featureCollection.features[0].id) {
+          f.properties.selected = true;
+        }
+        return f;
+      });
+      const gj = {
+        type: 'FeatureCollection',
+        features,
+      };
       this.setState({
         selectedFeature: featureCollection.features[0],
+        geojson: gj,
       });
     } else {
+      const features = this.state.geojson.features.map(f => {
+        delete f.properties.selected;
+        return f;
+      });
+      const gj = {
+        type: 'FeatureCollection',
+        features,
+      };
       this.setState({
         selectedFeature: null,
+        geojson: gj,
       });
     }
   };
@@ -255,12 +276,14 @@ export default class LayerDetails extends Component {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
     setTimeout(() => {
-      this._map.fitBounds(
-        [+metadata.bbox[0], +metadata.bbox[1]],
-        [+metadata.bbox[2], +metadata.bbox[3]],
-        100,
-        0
-      );
+      if (this._map) {
+        this._map.fitBounds(
+          [+metadata.bbox[0], +metadata.bbox[1]],
+          [+metadata.bbox[2], +metadata.bbox[3]],
+          100,
+          0
+        );
+      }
     }, 500);
   };
 
@@ -295,10 +318,8 @@ export default class LayerDetails extends Component {
 
   renderPoints() {
     let shape;
-    if (this.state.selectedFeature) {
-      const newFeatures = this.state.geojson.features.filter(
-        f => f.id !== this.state.selectedFeature.id
-      );
+    if (this.state.editing) {
+      const newFeatures = this.state.geojson.features.filter(f => !f.properties.selected);
       shape = {
         ...this.state.geojson,
         features: newFeatures,
@@ -308,7 +329,19 @@ export default class LayerDetails extends Component {
     }
     return (
       <MapboxGL.ShapeSource id="pointSource" shape={shape}>
-        <MapboxGL.CircleLayer id="pointLayer" style={layerStyles.points} />
+        <MapboxGL.CircleLayer
+          id="pointLayer"
+          sourceLayerID="pointLayer"
+          filter={['!has', 'selected']}
+          style={layerStyles.points}
+        />
+        <MapboxGL.CircleLayer
+          id="selectedFeatureFill"
+          sourceLayerID="selectedFeatureLayer"
+          filter={['has', 'selected']}
+          style={layerStyles.selectedFeature}
+          aboveLayerID="pointLayer"
+        />
       </MapboxGL.ShapeSource>
     );
   }
@@ -362,11 +395,7 @@ export default class LayerDetails extends Component {
           {this.state.editing && (
             <View style={styles.overlay} pointerEvents="box-none">
               <View style={styles.centerOverlay} pointerEvents="none">
-                <FAnnotationView
-                  radius={7}
-                  backgroundColor={'rgba(255,220,0,0.8)'}
-                  selected={true}
-                />
+                <FAnnotationView radius={7} backgroundColor={orange} selected={true} />
               </View>
               <View style={styles.topOverlay} pointerEvents="box-none">
                 <View style={styles.mapOverlay}>
@@ -388,11 +417,7 @@ export default class LayerDetails extends Component {
           {adding && (
             <View style={styles.overlay} pointerEvents="box-none">
               <View style={styles.centerOverlay} pointerEvents="none">
-                <FAnnotationView
-                  radius={7}
-                  backgroundColor={'rgba(255,220,0,0.8)'}
-                  selected={true}
-                />
+                <FAnnotationView radius={7} backgroundColor={orange} selected={true} />
               </View>
               <View style={styles.topOverlay} pointerEvents="box-none">
                 <View style={styles.mapOverlay}>
@@ -424,16 +449,6 @@ export default class LayerDetails extends Component {
           showUserLocation={this.state.trackingLocation}
         >
           {!!this.state.geojson && this.renderPoints()}
-          {!!this.state.selectedFeature &&
-            !this.state.editing && (
-              <MapboxGL.ShapeSource id="selectedFeatureSource" shape={this.state.selectedFeature}>
-                <MapboxGL.CircleLayer
-                  id="selectedFeatureFill"
-                  style={layerStyles.selectedFeature}
-                  aboveLayerID="pointLayer"
-                />
-              </MapboxGL.ShapeSource>
-            )}
         </MapboxGL.MapView>
         {!!this.state.selectedFeature &&
           !this.state.editing && (

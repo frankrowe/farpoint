@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 
 const DEFAULT_RADIUS = 10;
 const DEFAULT_BORDER_WIDTH = 2;
-const DEFAULT_BORDER_COLOR = '#333';
+const DEFAULT_BORDER_COLOR = '#fff';
 const DEFAULT_COLOR = 'rgba(255,65,54,0.8)';
 
 export const FAnnotationView = ({ radius, backgroundColor, selected }) => {
