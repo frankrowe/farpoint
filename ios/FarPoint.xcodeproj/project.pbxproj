@@ -36,6 +36,8 @@
 		2DCD954D1E0B4F2C00145EB5 /* FarPointTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* FarPointTests.m */; };
 		333309EFCBE74A3686087AB3 /* libRealmReact.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EF4269CF48914120ACB70F46 /* libRealmReact.a */; };
 		33BC19EF2FFE4ACCBF0D036C /* libRNImagePicker.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 035C0904E939400B85A2A5EB /* libRNImagePicker.a */; };
+		543E1F801FA0DB3C0057525A /* Fabric.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 543E1F5C1FA0DB3C0057525A /* Fabric.framework */; };
+		543E1F811FA0DB3C0057525A /* Crashlytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 543E1F7F1FA0DB3C0057525A /* Crashlytics.framework */; };
 		5462E6991F86AA4C00CE7825 /* libRCTMGL.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 54C3153A1F858EDE003BEF71 /* libRCTMGL.a */; };
 		5462E7331F86AD9600CE7825 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5462E7321F86AD9600CE7825 /* Mapbox.framework */; };
 		5462E7341F86AD9600CE7825 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5462E7321F86AD9600CE7825 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -342,6 +344,8 @@
 		2D02E4901E0B4A5D006451C7 /* FarPoint-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "FarPoint-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F504783DB91479FA52B6AEF /* libc++.tbd */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		4B25D757F3B749FB872BB518 /* libz.tbd */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		543E1F5C1FA0DB3C0057525A /* Fabric.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Fabric.framework; sourceTree = "<group>"; };
+		543E1F7F1FA0DB3C0057525A /* Crashlytics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Crashlytics.framework; sourceTree = "<group>"; };
 		5462E7321F86AD9600CE7825 /* Mapbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Mapbox.framework; sourceTree = "<group>"; };
 		54C315351F858EDD003BEF71 /* RCTMGL.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTMGL.xcodeproj; path = "../node_modules/@mapbox/react-native-mapbox-gl/ios/RCTMGL.xcodeproj"; sourceTree = "<group>"; };
 		54D636331F9F80E2001A3C77 /* mapskin.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = mapskin.ttf; sourceTree = "<group>"; };
@@ -379,7 +383,9 @@
 				133E29F31AD74F7200F7D852 /* libRCTLinking.a in Frameworks */,
 				00C302E91ABCBA2D00DB3ED1 /* libRCTNetwork.a in Frameworks */,
 				139105C61AF99C1200B5F7CC /* libRCTSettings.a in Frameworks */,
+				543E1F801FA0DB3C0057525A /* Fabric.framework in Frameworks */,
 				832341BD1AAA6AB300B99B32 /* libRCTText.a in Frameworks */,
+				543E1F811FA0DB3C0057525A /* Crashlytics.framework in Frameworks */,
 				00C302EA1ABCBA2D00DB3ED1 /* libRCTVibration.a in Frameworks */,
 				139FDEF61B0652A700C62182 /* libRCTWebSocket.a in Frameworks */,
 				333309EFCBE74A3686087AB3 /* libRealmReact.a in Frameworks */,
@@ -621,6 +627,8 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				543E1F7F1FA0DB3C0057525A /* Crashlytics.framework */,
+				543E1F5C1FA0DB3C0057525A /* Fabric.framework */,
 				5462E7321F86AD9600CE7825 /* Mapbox.framework */,
 				13B07FAE1A68108700A75B9A /* FarPoint */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
@@ -684,7 +692,8 @@
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				54C3152E1F858EC1003BEF71 /* Embed Frameworks */,
-				54C3153B1F858EF0003BEF71 /* ShellScript */,
+				54C3153B1F858EF0003BEF71 /* Mapbox Strip Frameworks */,
+				543E1F821FA0DB500057525A /* Run Crashlytics */,
 			);
 			buildRules = (
 			);
@@ -1149,13 +1158,28 @@
 			shellPath = /bin/sh;
 			shellScript = "export NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh";
 		};
-		54C3153B1F858EF0003BEF71 /* ShellScript */ = {
+		543E1F821FA0DB500057525A /* Run Crashlytics */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Run Crashlytics";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/Fabric.framework/run\" 93c312957d2dbf3351bffe24bea587c15ab7a893 d064c96c85f614e2de7f54f42172c4f48c4f3ee78fed49e0eba57a3982c9ad0e";
+		};
+		54C3153B1F858EF0003BEF71 /* Mapbox Strip Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Mapbox Strip Frameworks";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
