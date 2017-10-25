@@ -206,7 +206,7 @@ export default class LayerDetails extends Component {
     const { screenPointX, screenPointY } = e.properties;
 
     const featureCollection = await this._map.queryRenderedFeaturesInRect(
-      [screenPointY + 10, screenPointX + 10, screenPointY - 10, screenPointX - 10],
+      [screenPointY + 15, screenPointX + 15, screenPointY - 15, screenPointX - 15],
       null,
       ['pointLayer']
     );
