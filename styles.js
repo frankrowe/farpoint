@@ -8,3 +8,4 @@ export const green = '#209678';
 export const lightGreen = '#ACCD38';
 export const gray = '#F5F5F6';
 export const darkGray = '#E1E2E1';
+export const red = '#D9534F';

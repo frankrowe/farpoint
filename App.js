@@ -13,6 +13,7 @@ import LayerDetails from './LayerDetails';
 import Form from './Form';
 import WFSAuth from './WFSAuth';
 import WFSSettings from './WFSSettings';
+import Submissions from './Submissions';
 import { lightGreen, green } from './styles';
 
 const AppStack = StackNavigator(
@@ -23,6 +24,7 @@ const AppStack = StackNavigator(
     Form: { screen: Form },
     WFSAuth: { screen: WFSAuth },
     WFSSettings: { screen: WFSSettings },
+    Submissions: { screen: Submissions },
   },
   {
     navigationOptions: {

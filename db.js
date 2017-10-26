@@ -37,6 +37,7 @@ const SubmissionSchema = {
   primaryKey: 'id',
   properties: {
     id: 'string',
+    created: 'date',
     operation: 'string', //insert || update
     point: 'string', // geojson
     insert_success: 'bool',
@@ -57,13 +58,27 @@ const FeatureSchema = {
 //single exported Realm instance
 export const realm = new Realm({
   schema: [WFSSchema, LayerSchema, SubmissionSchema, FeatureSchema],
+  schemaVersion: 1,
+  migration: (oldRealm, newRealm) => {
+    if (oldRealm.schemaVersion < 1) {
+      const oldObjects = oldRealm.objects('Submission');
+      const newObjects = newRealm.objects('Submission');
+      for (let i = 0; i < oldObjects.length; i++) {
+        newObjects[i].created = new Date();
+      }
+    }
+  },
 });
 
 //track connection status
 let connectionType = 'none';
 let currentState = AppState.currentState;
 let isConnected = false;
-
+NetInfo.getConnectionInfo().then(async connectionInfo => {
+  console.log(
+    'Initial, type: ' + connectionInfo.type + ', effectiveType: ' + connectionInfo.effectiveType
+  );
+});
 export const monitor = () => {
   stateListener();
   //connectionListener();
@@ -186,36 +201,6 @@ export const syncWFS = wfs => {
   return Promise.all(inserts);
 };
 
-export const save = (layer, point, operation = 'insert') => {
-  console.log('saving', layer, point, operation);
-  let submission;
-  try {
-    realm.write(() => {
-      submission = {
-        id: uuid.v1(),
-        operation,
-        point: JSON.stringify(point),
-        insert_success: false,
-        insert_attempts: 0,
-      };
-      layer.submissions.push(submission);
-    });
-    realm.write(() => {}); //trigger notif
-    return layer.submissions[layer.submissions.length - 1];
-  } catch (error) {
-    console.log('save error', error);
-    return false;
-  }
-};
-
-export const deleteFeature = async (layer, point) => {
-  const _wfs = layer.wfs[0];
-  const success = await wfs.postTransaction(_wfs, layer, point, 'delete');
-  return success;
-};
-
-// Private methods
-
 export const insert = async submission => {
   console.log('inserting submission', submission);
   const point = JSON.parse(submission.point);
@@ -231,6 +216,73 @@ export const insert = async submission => {
     return false;
   }
 };
+
+export const save = (layer, point, operation = 'insert') => {
+  console.log('saving', layer, point, operation);
+  let submission;
+  try {
+    realm.write(() => {
+      submission = {
+        id: uuid.v1(),
+        operation,
+        created: new Date(),
+        point: JSON.stringify(point),
+        insert_success: false,
+        insert_attempts: 0,
+      };
+      layer.submissions.push(submission);
+    });
+    realm.write(() => {}); //trigger notif
+    return layer.submissions[layer.submissions.length - 1];
+  } catch (error) {
+    console.log('save error', error);
+    return false;
+  }
+};
+
+export const updateSubmission = point => {
+  try {
+    const id = point.id;
+    const submissions = realm.objects('Submission').filtered(`id = "${id}"`);
+    if (submissions.length) {
+      const submission = submissions[0];
+      realm.write(() => {
+        submission.point = JSON.stringify(point);
+      });
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.log('save error', error);
+    return false;
+  }
+};
+
+export const deleteSubmission = point => {
+  try {
+    const id = point.id;
+    const submissions = realm.objects('Submission').filtered(`id = "${id}"`);
+    if (submissions.length) {
+      const submission = submissions[0];
+      realm.write(() => {
+        realm.delete(submission);
+      });
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.log('delete error', error);
+    return false;
+  }
+};
+
+export const deleteFeature = async (layer, point) => {
+  const _wfs = layer.wfs[0];
+  const success = await wfs.postTransaction(_wfs, layer, point, 'delete');
+  return success;
+};
+
+// Private methods
 
 const insertAll = () => {
   realm.objects('WFS').forEach(wfs => {

@@ -1,8 +1,20 @@
 import React from 'react';
-import { Button, Image, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  NetInfo,
+  Alert,
+  Button,
+  Image,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { sortBy } from 'lodash';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { darkGray, orange } from './styles';
+import * as db from './db';
+import { darkGray, orange, green, red } from './styles';
 
 const ImageRow = ({ uri, onImageTap }) => (
   <TouchableOpacity onPress={() => onImageTap(uri)}>
@@ -54,7 +66,7 @@ class FeatureDetailsRow extends React.PureComponent {
         <View style={styles.cellRowIcon}>
           {item.key === 'location' && (
             <TouchableOpacity onPress={item.onEditLocation}>
-              <Icon name="md-locate" size={24} color={orange} />
+              <Icon name="md-locate" size={32} color={orange} />
             </TouchableOpacity>
           )}
         </View>
@@ -68,12 +80,36 @@ class FeatureDetailsRow extends React.PureComponent {
 }
 
 class FeatureDetails extends React.Component {
-  state = { image: false };
+  state = { image: false, uploadStatus: false };
 
   _keyExtractor = (item, index) => `${item.id}.${index}`;
 
   onImageTap = image => {
     this.setState({ image });
+  };
+
+  onPressUpload = () => {
+    NetInfo.getConnectionInfo().then(async connectionInfo => {
+      connectionType = connectionInfo.type;
+      isConnected = !(connectionType == 'none');
+      if (isConnected) {
+        const id = this.props.selectedFeature.id;
+        const submissions = db.realm.objects('Submission').filtered(`id = "${id}"`);
+        if (submissions.length) {
+          const submission = submissions[0];
+          this.setState({ uploadStatus: 'loading' });
+          const success = await db.insert(submission);
+          this.setState({ uploadStatus: success ? 'success' : 'fail' });
+          this.props.makeAnnotations();
+        }
+      } else {
+        requestAnimationFrame(() => {
+          Alert.alert('Offline', 'Your device must be connected to upload submissions.', [
+            { text: 'OK' },
+          ]);
+        });
+      }
+    });
   };
 
   render() {
@@ -109,17 +145,37 @@ class FeatureDetails extends React.Component {
             style={{
               fontSize: 18,
               fontWeight: '800',
-              lineHeight: 24,
+              lineHeight: 32,
             }}
           >
             Properties
           </Text>
           <View style={styles.topbarBtns}>
+            {selectedFeature.unsynced &&
+              this.state.uploadStatus == false && (
+                <TouchableOpacity style={styles.topbarBtn} onPress={this.onPressUpload}>
+                  <Icon name="md-cloud-upload" size={32} color={orange} />
+                </TouchableOpacity>
+              )}
+            {selectedFeature.unsynced &&
+              this.state.uploadStatus == 'loading' && (
+                <ActivityIndicator style={styles.topbarBtn} />
+              )}
+            {selectedFeature.unsynced &&
+              this.state.uploadStatus == 'success' && (
+                <Icon style={styles.topbarBtn} name="md-checkmark" size={32} color={green} />
+              )}
+            {selectedFeature.unsynced &&
+              this.state.uploadStatus == 'fail' && (
+                <TouchableOpacity style={styles.topbarBtn} onPress={this.onPressUpload}>
+                  <Icon name="md-close" size={32} color={red} />
+                </TouchableOpacity>
+              )}
             <TouchableOpacity style={styles.topbarBtn} onPress={onEditProperties}>
-              <Icon name="md-create" size={24} color={orange} />
+              <Icon name="md-create" size={32} color={orange} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.topbarBtn} onPress={onPressDelete}>
-              <Icon name="md-trash" size={24} color={'#D9534F'} />
+              <Icon name="md-trash" size={32} color={'#D9534F'} />
             </TouchableOpacity>
           </View>
         </View>
@@ -161,12 +217,12 @@ const styles = StyleSheet.create({
   },
   topbarBtns: {
     flex: 0.5,
-    height: 24,
+    height: 32,
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
   topbarBtn: {
-    marginLeft: 16,
+    marginLeft: 24,
   },
   tableContainer: {
     flex: 1,

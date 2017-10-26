@@ -33,20 +33,33 @@ class Form extends React.Component {
       geometry: feature.geometry,
       properties: formData,
     };
-    const submission = db.save(layer, gj, operation);
-    if (submission) {
-      const insertSuccess = await db.insert(submission);
+    if (feature.unsynced) {
+      const success = db.updateSubmission(gj);
       this.setState({ submitting: false });
-      if (insertSuccess) {
+      if (success) {
         if (makeAnnotations) {
           makeAnnotations();
         }
         this.scform.formSubmitted();
       } else {
-        this.scform.formSubmittedOffline();
+        this.scform.formSubmittedError();
       }
     } else {
-      this.scform.formSubmittedError();
+      const submission = db.save(layer, gj, operation);
+      if (submission) {
+        const insertSuccess = await db.insert(submission);
+        this.setState({ submitting: false });
+        if (makeAnnotations) {
+          makeAnnotations();
+        }
+        if (insertSuccess) {
+          this.scform.formSubmitted();
+        } else {
+          this.scform.formSubmittedOffline();
+        }
+      } else {
+        this.scform.formSubmittedError();
+      }
     }
   }
   componentWillMount() {
@@ -96,6 +109,7 @@ class Form extends React.Component {
           form={this.state.schema}
           submitting={submitting}
           saveForm={this.saveForm}
+          navigation={this.props.navigation}
         />
       </View>
     );

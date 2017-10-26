@@ -12,7 +12,7 @@ import { blue, orange, gray, darkGray, green } from './styles';
 
 const WFSCell = props => {
   const submissionCount = props.wfs.layers.reduce((prev, layer) => {
-    return layer.submissions.length;
+    return prev + layer.submissions.length;
   }, 0);
   return (
     <View>
@@ -37,7 +37,7 @@ export default class WFSList extends Component {
     const { navigate } = this.props.navigation;
     const { wfs } = this.props;
     return (
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: 'white' }}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Your Exchange Servers</Text>
         </View>

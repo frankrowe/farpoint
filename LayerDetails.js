@@ -31,6 +31,11 @@ const accessToken =
   'sk.eyJ1IjoiYm91bmRsZXNzIiwiYSI6ImNqOTV0Ym50ZjRsYWozM241c3JxOTJkZzcifQ.MgzQw0Pab-97VfWFfYzOpg';
 MapboxGL.setAccessToken(accessToken);
 
+const emptyFeatureCollection = {
+  type: 'FeatureCollection',
+  features: [],
+};
+
 const layerStyles = MapboxGL.StyleSheet.create({
   points: {
     circleRadius: 5,
@@ -41,10 +46,24 @@ const layerStyles = MapboxGL.StyleSheet.create({
   },
   selectedFeature: {
     circleRadius: 5,
-    circleColor: '#FFDC00',
+    circleColor: '#FF4136',
     circleOpacity: 0.9,
     circleStrokeWidth: 2,
-    circleStrokeColor: '#111111',
+    circleStrokeColor: '#FFDC00',
+  },
+  pointsUnsynced: {
+    circleRadius: 5,
+    circleColor: '#B10DC9',
+    circleOpacity: 0.9,
+    circleStrokeWidth: 2,
+    circleStrokeColor: '#fff',
+  },
+  pointsUnsyncedSelected: {
+    circleRadius: 5,
+    circleColor: '#B10DC9',
+    circleOpacity: 0.9,
+    circleStrokeWidth: 2,
+    circleStrokeColor: '#FFDC00',
   },
 });
 
@@ -57,6 +76,7 @@ export default class LayerDetails extends Component {
     centerCoordinate: [0, 0],
     annotations: [],
     geojson: null,
+    unSyncedFeatureCollection: null,
     selectedFeature: null,
     editing: false,
     trackingLocation: false,
@@ -153,30 +173,46 @@ export default class LayerDetails extends Component {
       };
     }
     this.setState({ working: true });
-    const submission = db.save(layer, gj, operation);
-    if (submission) {
-      const insertSuccess = await db.insert(submission);
+    if (this.state.selectedFeature.unsynced) {
+      const success = db.updateSubmission(gj);
       this.setState({ working: false });
-      if (insertSuccess) {
+      if (success) {
         requestAnimationFrame(() => {
           Alert.alert('Success', 'Location has been updated.', [{ text: 'OK' }]);
         });
       } else {
         requestAnimationFrame(() => {
-          Alert.alert(
-            'Saved',
-            "This update was unable to be uploaded. It's been saved, and you can attempt to sync at a later time.",
-            [{ text: 'OK' }]
-          );
+          Alert.alert('Error', 'There was an error saving this update. Please try again.', [
+            { text: 'OK' },
+          ]);
         });
       }
     } else {
-      this.setState({ working: false });
-      requestAnimationFrame(() => {
-        Alert.alert('Error', 'There was an error saving this update. Please try again.', [
-          { text: 'OK' },
-        ]);
-      });
+      const submission = db.save(layer, gj, operation);
+      if (submission) {
+        const insertSuccess = await db.insert(submission);
+        this.setState({ working: false });
+        if (insertSuccess) {
+          requestAnimationFrame(() => {
+            Alert.alert('Success', 'Location has been updated.', [{ text: 'OK' }]);
+          });
+        } else {
+          requestAnimationFrame(() => {
+            Alert.alert(
+              'Saved',
+              "This update was unable to be uploaded. It's been saved, and you can attempt to sync at a later time.",
+              [{ text: 'OK' }]
+            );
+          });
+        }
+      } else {
+        this.setState({ working: false });
+        requestAnimationFrame(() => {
+          Alert.alert('Error', 'There was an error saving this update. Please try again.', [
+            { text: 'OK' },
+          ]);
+        });
+      }
     }
     this.setState({ editing: false, selectedFeature: null });
     this.makeAnnotations();
@@ -191,53 +227,123 @@ export default class LayerDetails extends Component {
   };
 
   onPressDelete = () => {
-    Alert.alert(
-      'Delete Record?',
-      'This will delete this record from your device and from Exchange.',
-      [
-        { text: 'Delete', onPress: this.deleteFeature },
-        { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
-      ],
-      { cancelable: false }
-    );
+    if (this.state.selectedFeature.unsynced) {
+      Alert.alert(
+        'Delete Submission?',
+        'This will delete this submission from your device.',
+        [
+          { text: 'Delete', onPress: this.deleteFeature },
+          { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
+        ],
+        { cancelable: false }
+      );
+    } else {
+      Alert.alert(
+        'Delete Record?',
+        'This will delete this record from your device and from Exchange.',
+        [
+          { text: 'Delete', onPress: this.deleteFeature },
+          { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
+        ],
+        { cancelable: false }
+      );
+    }
   };
 
   onMapPress = async e => {
     const { screenPointX, screenPointY } = e.properties;
 
-    const featureCollection = await this._map.queryRenderedFeaturesInRect(
-      [screenPointY + 15, screenPointX + 15, screenPointY - 15, screenPointX - 15],
+    let featureCollection = await this._map.queryRenderedFeaturesInRect(
+      [screenPointY + 10, screenPointX + 10, screenPointY - 10, screenPointX - 10],
       null,
       ['pointLayer']
     );
+
+    let featureCollectionUnsynced = await this._map.queryRenderedFeaturesInRect(
+      [screenPointY + 10, screenPointX + 10, screenPointY - 10, screenPointX - 10],
+      null,
+      ['pointsUnsynced']
+    );
+
     if (featureCollection.features.length) {
-      const features = this.state.geojson.features.map(f => {
-        if (f.id === featureCollection.features[0].id) {
-          f.properties.selected = true;
-        }
-        return f;
-      });
-      const gj = {
-        type: 'FeatureCollection',
-        features,
-      };
-      this.setState({
+      const newState = {
         selectedFeature: featureCollection.features[0],
-        geojson: gj,
-      });
-    } else {
-      const features = this.state.geojson.features.map(f => {
-        delete f.properties.selected;
-        return f;
-      });
-      const gj = {
-        type: 'FeatureCollection',
-        features,
       };
-      this.setState({
+      newState.geojson = {
+        type: 'FeatureCollection',
+        features: this.state.geojson.features.map(f => {
+          if (f.id === featureCollection.features[0].id) {
+            f.properties.selected = true;
+          } else {
+            delete f.properties.selected;
+          }
+          return f;
+        }),
+      };
+      if (this.state.unSyncedFeatureCollection) {
+        newState.unSyncedFeatureCollection = {
+          type: 'FeatureCollection',
+          features: this.state.unSyncedFeatureCollection.features.map(f => {
+            delete f.properties.selected;
+            return f;
+          }),
+        };
+      }
+      this.setState(newState);
+    } else if (featureCollectionUnsynced.features.length) {
+      const newState = {};
+      const selectedFeature = featureCollectionUnsynced.features[0];
+      selectedFeature.unsynced = true;
+      newState.selectedFeature = selectedFeature;
+      newState.unSyncedFeatureCollection = {
+        type: 'FeatureCollection',
+        features: this.state.unSyncedFeatureCollection.features.map(f => {
+          if (f.id === featureCollectionUnsynced.features[0].id) {
+            f.properties.selected = true;
+          } else {
+            delete f.properties.selected;
+          }
+          return f;
+        }),
+      };
+      if (this.state.geojson) {
+        newState.geojson = {
+          type: 'FeatureCollection',
+          features: this.state.geojson.features.map(f => {
+            delete f.properties.selected;
+            return f;
+          }),
+        };
+      }
+      this.setState(newState);
+    } else {
+      const newState = {
         selectedFeature: null,
-        geojson: gj,
-      });
+      };
+      if (this.state.geojson) {
+        const features = this.state.geojson.features.map(f => {
+          delete f.properties.selected;
+          return f;
+        });
+        const geojson = {
+          type: 'FeatureCollection',
+          features,
+        };
+        newState.geojson = geojson;
+      }
+      if (this.state.unSyncedFeatureCollection) {
+        const featuresU = this.state.unSyncedFeatureCollection.features.map(f => {
+          delete f.properties.selected;
+          return f;
+        });
+        const unSyncedFeatureCollection = {
+          type: 'FeatureCollection',
+          features: featuresU,
+        };
+        newState.unSyncedFeatureCollection = unSyncedFeatureCollection;
+      }
+
+      this.setState(newState);
     }
   };
 
@@ -268,8 +374,27 @@ export default class LayerDetails extends Component {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
     this.setState({ loading: true });
+    const newState = {};
     const featureCollection = await wfs.getFeatures(this.props.navigation.state.params.wfs, layer);
-    this.setState({ geojson: featureCollection, loading: false });
+    if (featureCollection) {
+      newState.geojson = featureCollection;
+    }
+
+    const unSyncedFeatures = layer.submissions.filter(s => !s.insert_success).map(s => {
+      const f = JSON.parse(s.point);
+      f.id = s.id;
+      f.type = 'Feature';
+      return f;
+    });
+    console.log(unSyncedFeatures.length);
+    const unSyncedFeatureCollection = {
+      type: 'FeatureCollection',
+      features: unSyncedFeatures,
+    };
+    newState.unSyncedFeatureCollection = unSyncedFeatureCollection;
+
+    newState.loading = false;
+    this.setState(newState);
   };
 
   zoomToLayerBounds = () => {
@@ -289,21 +414,31 @@ export default class LayerDetails extends Component {
 
   deleteFeature = async () => {
     const feature = this.state.selectedFeature;
-    const layer = this.props.navigation.state.params.layer;
+    let success;
+    let msg;
     this.setState({ working: true });
-    const success = await db.deleteFeature(layer, feature);
-    this.setState({ working: false });
-    if (success) {
-      requestAnimationFrame(() => {
-        Alert.alert('Success', 'This record has been deleted', [
-          { text: 'OK', onPress: this.makeAnnotations },
-        ]);
-      });
+    if (feature.unsynced) {
+      success = db.deleteSubmission(feature);
+      msg = 'This submission has been deleted';
     } else {
-      requestAnimationFrame(() => {
-        Alert.alert('Error', 'Unable to delete. Please try again later.', [{ text: 'OK' }]);
-      });
+      const layer = this.props.navigation.state.params.layer;
+      success = await db.deleteFeature(layer, feature);
+      msg = 'This record has been deleted';
     }
+    this.setState({ working: false }, () => {
+      setTimeout(() => {
+        if (success) {
+          requestAnimationFrame(() => {
+            Alert.alert('Success', msg, [{ text: 'OK', onPress: this.makeAnnotations }]);
+          });
+        } else {
+          requestAnimationFrame(() => {
+            Alert.alert('Error', 'Unable to delete. Please try again later.', [{ text: 'OK' }]);
+          });
+        }
+      }, 200);
+    });
+
     this.setState({ selectedFeature: null });
   };
 
@@ -318,14 +453,18 @@ export default class LayerDetails extends Component {
 
   renderPoints() {
     let shape;
-    if (this.state.editing) {
-      const newFeatures = this.state.geojson.features.filter(f => !f.properties.selected);
-      shape = {
-        ...this.state.geojson,
-        features: newFeatures,
-      };
+    if (this.state.geojson) {
+      if (this.state.editing) {
+        const newFeatures = this.state.geojson.features.filter(f => !f.properties.selected);
+        shape = {
+          ...this.state.geojson,
+          features: newFeatures,
+        };
+      } else {
+        shape = this.state.geojson;
+      }
     } else {
-      shape = this.state.geojson;
+      shape = emptyFeatureCollection;
     }
     return (
       <MapboxGL.ShapeSource id="pointSource" shape={shape}>
@@ -341,6 +480,41 @@ export default class LayerDetails extends Component {
           filter={['has', 'selected']}
           style={layerStyles.selectedFeature}
           aboveLayerID="pointLayer"
+        />
+      </MapboxGL.ShapeSource>
+    );
+  }
+
+  renderPointsUnsynced() {
+    let shape;
+    if (this.state.unSyncedFeatureCollection) {
+      if (this.state.editing) {
+        const newFeatures = this.state.unSyncedFeatureCollection.features.filter(
+          f => !f.properties.selected
+        );
+        shape = {
+          ...this.state.unSyncedFeatureCollection,
+          features: newFeatures,
+        };
+      } else {
+        shape = this.state.unSyncedFeatureCollection;
+      }
+    } else {
+      shape = emptyFeatureCollection;
+    }
+    return (
+      <MapboxGL.ShapeSource id="pointsUnsyncedSource" shape={shape}>
+        <MapboxGL.CircleLayer
+          id="pointsUnsynced"
+          sourceLayerID="pointsUnsyncedLayer"
+          filter={['!has', 'selected']}
+          style={layerStyles.pointsUnsynced}
+        />
+        <MapboxGL.CircleLayer
+          id="pointsUnsyncedSelected"
+          sourceLayerID="pointsUnsyncedSelectedLayer"
+          filter={['has', 'selected']}
+          style={layerStyles.pointsUnsyncedSelected}
         />
       </MapboxGL.ShapeSource>
     );
@@ -446,13 +620,15 @@ export default class LayerDetails extends Component {
           onRegionDidChange={this.onRegionDidChange}
           showUserLocation={this.state.trackingLocation}
         >
-          {!!this.state.geojson && this.renderPoints()}
+          {this.renderPoints()}
+          {this.renderPointsUnsynced()}
         </MapboxGL.MapView>
         {!!this.state.selectedFeature &&
           !this.state.editing && (
             <View style={[styles.overlay, { justifyContent: 'flex-end' }]} pointerEvents="box-none">
               <FeatureDetails
                 layer={layer}
+                makeAnnotations={this.makeAnnotations}
                 key={`${this.state.selectedFeature.id}_details`}
                 selectedFeature={this.state.selectedFeature}
                 onEditClose={this.onEditClose}

@@ -13,13 +13,23 @@ export default class WFSSettings extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { syncing: false };
+    this.state = { syncing: false, refreshing: false };
   }
 
   syncSubmissions = async wfs => {
-    this.setState({ syncing: true });
-    await db.syncWFS(wfs);
-    this.setState({ syncing: false });
+    // const handler = (submissions, changes) => {
+    //   console.log(changes);
+    //   changes.modifications.forEach(index => {
+    //     let modifiedSubmission = submissions[index];
+    //     console.log(modifiedSubmission);
+    //   });
+    // };
+    // db.realm.objects('Submission').addListener(handler);
+    // this.setState({ syncing: true });
+    // await db.syncWFS(wfs);
+    // this.setState({ syncing: false });
+    // db.realm.objects('Submission').removeListener(handler);
+    this.props.navigation.navigate('Submissions', { wfs });
   };
 
   deleteWFS = (navigate, wfs) => {
@@ -35,9 +45,9 @@ export default class WFSSettings extends Component {
   refreshWFS = async () => {
     const { wfs } = this.props.navigation.state.params;
     const { navigate } = this.props.navigation;
-    this.setState({ syncing: true });
+    this.setState({ refreshing: true });
     const newWFS = await db.refreshWFS(wfs);
-    this.setState({ syncing: false });
+    this.setState({ refreshing: false });
     this.props.navigation.dispatch(
       NavigationActions.reset({
         index: 0,
@@ -101,10 +111,18 @@ export default class WFSSettings extends Component {
             <Text style={styles.note}>Refresh Layers and Metadata for this Server.</Text>
           </View>
         </View>
+        <Modal visible={this.state.refreshing} transparent>
+          <View style={styles.modalContainer}>
+            <View style={styles.modal}>
+              <ActivityIndicator size="large" />
+            </View>
+          </View>
+        </Modal>
         <Modal visible={this.state.syncing} transparent>
           <View style={styles.modalContainer}>
             <View style={styles.modal}>
               <ActivityIndicator size="large" />
+              <Text>Syncing... 1/{submissonCount}</Text>
             </View>
           </View>
         </Modal>

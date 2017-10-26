@@ -2,10 +2,12 @@ import React, { Component } from 'react';
 import {
   AppRegistry,
   Button,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  PermissionsAndroid,
   View,
 } from 'react-native';
 import Realm from 'realm';
@@ -48,6 +50,19 @@ export default class FarPoint extends Component {
     db.refreshExchangeTokens();
     const wfs = db.realm.objects('WFS');
     this.setState({ loading: false, wfs });
+    if (Platform.OS === 'android' && Platform.Version >= 23) {
+      try {
+        const granted = PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'GPS permission',
+            message: 'Farpoint needs access to your GPS',
+          }
+        );
+      } catch (err) {
+        console.warn(err);
+      }
+    }
   }
 
   render() {
@@ -81,11 +96,10 @@ export default class FarPoint extends Component {
             <Button color={orange} onPress={this.onPress} title={empty ? 'Continue' : 'Add'} />
           </View>
         </View>
-        {!empty && (
-          <View style={styles.bottom}>
-            <WFSList wfs={this.state.wfs} navigation={this.props.navigation} />
-          </View>
-        )}
+
+        <View style={styles.bottom}>
+          {!empty && <WFSList wfs={this.state.wfs} navigation={this.props.navigation} />}
+        </View>
       </View>
     );
   }
@@ -95,18 +109,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-    backgroundColor: 'white',
+    backgroundColor: gray,
   },
   top: {
-    backgroundColor: gray,
     paddingTop: 40,
     paddingBottom: 40,
     paddingLeft: 16,
     paddingRight: 15,
     justifyContent: 'center',
     alignItems: 'stretch',
-    borderBottomWidth: 1,
-    borderBottomColor: darkGray,
   },
   bottom: {
     flex: 1,
