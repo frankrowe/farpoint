@@ -29,7 +29,7 @@ export default class FarPoint extends Component {
 
   state = {
     loading: true,
-    wfsInput: 'https://exchange.boundlessgeo.io',
+    wfsInput: 'https://exchange-farpoint.boundlessgeo.io',
   };
 
   onChangeText = wfsInput => {
