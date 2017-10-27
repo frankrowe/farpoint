@@ -54,18 +54,6 @@ const ListCell = props => {
   );
 };
 
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-const insert = () => {
-  return new Promise(function(resolve, reject) {
-    setTimeout(() => {
-      resolve(true);
-    }, getRandomInt(1000, 2500));
-  });
-};
-
 export default class Submissions extends Component {
   static navigationOptions = ({ navigation }) => {
     return {
@@ -88,6 +76,7 @@ export default class Submissions extends Component {
         },
         async () => {
           const success = await db.insert(submission);
+          this.props.navigation.state.params.updateSubmissionCount();
           this.setState({
             submissionStatus: {
               ...this.state.submissionStatus,
@@ -101,8 +90,8 @@ export default class Submissions extends Component {
 
   syncSubmissions = () => {
     NetInfo.getConnectionInfo().then(connectionInfo => {
-      connectionType = connectionInfo.type;
-      isConnected = !(connectionType == 'none');
+      const connectionType = connectionInfo.type;
+      const isConnected = !(connectionType == 'none');
       if (isConnected) {
         const { wfs } = this.props.navigation.state.params;
         const submissions = wfs.layers.reduce((prev, layer) => {
@@ -127,6 +116,7 @@ export default class Submissions extends Component {
             submissions.forEach(async submission => {
               if (submission.insert_success === false) {
                 const success = await db.insert(submission);
+                this.props.navigation.state.params.updateSubmissionCount();
                 this.setState({
                   submissionStatus: {
                     ...this.state.submissionStatus,

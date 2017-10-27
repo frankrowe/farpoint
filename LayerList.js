@@ -14,9 +14,7 @@ const FormCell = props => {
           <Text style={styles.cellName} numberOfLines={1}>
             {metadata.Title}
           </Text>
-          <Text style={styles.cellSubtitle}>
-            Submissions: {props.layer.submissions.length} Unsaved: {unsaved.length}
-          </Text>
+          <Text style={styles.cellSubtitle}>Submissions: {props.layer.submissions.length}</Text>
         </View>
       </TouchableOpacity>
     </View>

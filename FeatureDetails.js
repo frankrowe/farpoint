@@ -90,8 +90,8 @@ class FeatureDetails extends React.Component {
 
   onPressUpload = () => {
     NetInfo.getConnectionInfo().then(async connectionInfo => {
-      connectionType = connectionInfo.type;
-      isConnected = !(connectionType == 'none');
+      const connectionType = connectionInfo.type;
+      const isConnected = !(connectionType == 'none');
       if (isConnected) {
         const id = this.props.selectedFeature.id;
         const submissions = db.realm.objects('Submission').filtered(`id = "${id}"`);

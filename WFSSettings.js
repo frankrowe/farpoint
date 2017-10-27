@@ -17,19 +17,10 @@ export default class WFSSettings extends Component {
   }
 
   syncSubmissions = async wfs => {
-    // const handler = (submissions, changes) => {
-    //   console.log(changes);
-    //   changes.modifications.forEach(index => {
-    //     let modifiedSubmission = submissions[index];
-    //     console.log(modifiedSubmission);
-    //   });
-    // };
-    // db.realm.objects('Submission').addListener(handler);
-    // this.setState({ syncing: true });
-    // await db.syncWFS(wfs);
-    // this.setState({ syncing: false });
-    // db.realm.objects('Submission').removeListener(handler);
-    this.props.navigation.navigate('Submissions', { wfs });
+    this.props.navigation.navigate('Submissions', {
+      wfs,
+      updateSubmissionCount: this.updateSubmissionCount,
+    });
   };
 
   deleteWFS = (navigate, wfs) => {
@@ -56,15 +47,24 @@ export default class WFSSettings extends Component {
     );
   };
 
-  render() {
+  updateSubmissionCount = () => {
     const { wfs } = this.props.navigation.state.params;
-    const { navigate } = this.props.navigation;
     let submissonCount = 0;
     if (wfs.layers) {
       wfs.layers.forEach(layer => {
         submissonCount += layer.submissions.filtered('insert_success == false').length;
       });
     }
+    this.setState({ submissonCount });
+  };
+
+  componentWillMount() {
+    this.updateSubmissionCount();
+  }
+
+  render() {
+    const { wfs } = this.props.navigation.state.params;
+    const { navigate } = this.props.navigation;
     return (
       <View style={{ flex: 1, backgroundColor: 'white' }}>
         <View
@@ -93,7 +93,7 @@ export default class WFSSettings extends Component {
             <View style={styles.button}>
               <Button
                 color={orange}
-                title={`Sync (${submissonCount})`}
+                title={`Sync (${this.state.submissonCount})`}
                 onPress={() => this.syncSubmissions(wfs)}
               />
             </View>
@@ -115,14 +115,6 @@ export default class WFSSettings extends Component {
           <View style={styles.modalContainer}>
             <View style={styles.modal}>
               <ActivityIndicator size="large" />
-            </View>
-          </View>
-        </Modal>
-        <Modal visible={this.state.syncing} transparent>
-          <View style={styles.modalContainer}>
-            <View style={styles.modal}>
-              <ActivityIndicator size="large" />
-              <Text>Syncing... 1/{submissonCount}</Text>
             </View>
           </View>
         </Modal>
