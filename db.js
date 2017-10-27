@@ -121,11 +121,13 @@ export const refreshExchangeTokens = () => {
     let token = JSON.parse(wfs.token);
     let created = wfs.created;
     let dif = Math.abs(new Date().getTime() - created.getTime()) / 1000;
-    if (dif > token.expires_in) {
+    const expiration = token.expires_in - token.expires_in * 0.1;
+    if (dif > expiration) {
       const newToken = await exchange.refreshToken(wfs);
       if (newToken) {
         realm.write(() => {
           wfs.token = JSON.stringify(newToken);
+          wfs.created = new Date();
         });
       }
     }
