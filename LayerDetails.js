@@ -319,34 +319,38 @@ export default class LayerDetails extends Component {
       }
       this.setState(newState);
     } else {
-      const newState = {
-        selectedFeature: null,
-      };
-      if (this.state.geojson) {
-        const features = this.state.geojson.features.map(f => {
-          delete f.properties.selected;
-          return f;
-        });
-        const geojson = {
-          type: 'FeatureCollection',
-          features,
-        };
-        newState.geojson = geojson;
-      }
-      if (this.state.unSyncedFeatureCollection) {
-        const featuresU = this.state.unSyncedFeatureCollection.features.map(f => {
-          delete f.properties.selected;
-          return f;
-        });
-        const unSyncedFeatureCollection = {
-          type: 'FeatureCollection',
-          features: featuresU,
-        };
-        newState.unSyncedFeatureCollection = unSyncedFeatureCollection;
-      }
-
-      this.setState(newState);
+      this.deselectFeature();
     }
+  };
+
+  deselectFeature = () => {
+    const newState = {
+      selectedFeature: null,
+    };
+    if (this.state.geojson) {
+      const features = this.state.geojson.features.map(f => {
+        delete f.properties.selected;
+        return f;
+      });
+      const geojson = {
+        type: 'FeatureCollection',
+        features,
+      };
+      newState.geojson = geojson;
+    }
+    if (this.state.unSyncedFeatureCollection) {
+      const featuresU = this.state.unSyncedFeatureCollection.features.map(f => {
+        delete f.properties.selected;
+        return f;
+      });
+      const unSyncedFeatureCollection = {
+        type: 'FeatureCollection',
+        features: featuresU,
+      };
+      newState.unSyncedFeatureCollection = unSyncedFeatureCollection;
+    }
+
+    this.setState(newState);
   };
 
   onPressLocation = () => {
@@ -633,6 +637,7 @@ export default class LayerDetails extends Component {
                 makeAnnotations={this.makeAnnotations}
                 key={`${this.state.selectedFeature.id}_details`}
                 selectedFeature={this.state.selectedFeature}
+                deselectFeature={this.deselectFeature}
                 onEditClose={this.onEditClose}
                 onEditProperties={this.onEditProperties}
                 onEditLocation={this.onEditLocation}

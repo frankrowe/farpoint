@@ -120,6 +120,7 @@ class FeatureDetails extends React.Component {
       onEditLocation,
       onEditProperties,
       onPressDelete,
+      deselectFeature,
     } = this.props;
     const metadata = JSON.parse(layer.metadata);
     const fields = sortBy(metadata.schema.fields, f => f.position);
@@ -146,10 +147,14 @@ class FeatureDetails extends React.Component {
               fontSize: 18,
               fontWeight: '800',
               lineHeight: 32,
+              width: 100,
             }}
           >
             Properties
           </Text>
+          <TouchableOpacity style={styles.closeBtn} onPress={deselectFeature}>
+            <Icon name="ios-arrow-down" size={24} color={'rgba(0,0,0,0.2)'} />
+          </TouchableOpacity>
           <View style={styles.topbarBtns}>
             {selectedFeature.unsynced &&
               this.state.uploadStatus == false && (
@@ -210,13 +215,13 @@ const styles = StyleSheet.create({
     borderTopColor: darkGray,
     borderBottomWidth: 0,
     borderTopWidth: 0,
-    paddingTop: 8,
+    paddingTop: 0,
     paddingBottom: 8,
     paddingLeft: 16,
     paddingRight: 16,
   },
   topbarBtns: {
-    flex: 0.5,
+    width: 100,
     height: 32,
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -275,6 +280,7 @@ const styles = StyleSheet.create({
     zIndex: 999,
     backgroundColor: 'rgba(0, 0, 0, 0)',
   },
+  closeBtn: {},
 });
 
 export default FeatureDetails;
