@@ -66,7 +66,7 @@ class FeatureDetailsRow extends React.PureComponent {
         <View style={styles.cellRowIcon}>
           {item.key === 'location' && (
             <TouchableOpacity onPress={item.onEditLocation}>
-              <Icon name="md-locate" size={32} color={orange} />
+              <Icon name="md-locate" size={24} color={orange} />
             </TouchableOpacity>
           )}
         </View>
@@ -100,7 +100,10 @@ class FeatureDetails extends React.Component {
           this.setState({ uploadStatus: 'loading' });
           const success = await db.insert(submission);
           this.setState({ uploadStatus: success ? 'success' : 'fail' });
-          this.props.makeAnnotations();
+          if (success) {
+            this.props.makeAnnotations();
+            this.props.deselectFeature();
+          }
         }
       } else {
         requestAnimationFrame(() => {
@@ -142,16 +145,9 @@ class FeatureDetails extends React.Component {
     return (
       <View style={styles.container}>
         <View style={styles.topbar}>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '800',
-              lineHeight: 32,
-              width: 100,
-            }}
-          >
-            Properties
-          </Text>
+          <View style={styles.topbarTextContainer}>
+            <Text style={styles.topbarText}>Properties</Text>
+          </View>
           <TouchableOpacity style={styles.closeBtn} onPress={deselectFeature}>
             <Icon name="ios-arrow-down" size={24} color={'rgba(0,0,0,0.2)'} />
           </TouchableOpacity>
@@ -213,21 +209,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomColor: darkGray,
     borderTopColor: darkGray,
-    borderBottomWidth: 0,
-    borderTopWidth: 0,
-    paddingTop: 0,
-    paddingBottom: 8,
-    paddingLeft: 16,
-    paddingRight: 16,
+  },
+  topbarTextContainer: {
+    width: 100,
+    marginLeft: 16,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topbarText: {
+    fontSize: 18,
+    fontWeight: '800',
   },
   topbarBtns: {
     width: 100,
-    height: 32,
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   topbarBtn: {
-    marginLeft: 24,
+    paddingLeft: 16,
+    paddingRight: 16,
   },
   tableContainer: {
     flex: 1,
@@ -280,7 +283,11 @@ const styles = StyleSheet.create({
     zIndex: 999,
     backgroundColor: 'rgba(0, 0, 0, 0)',
   },
-  closeBtn: {},
+  closeBtn: {
+    width: 50,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
 });
 
 export default FeatureDetails;
