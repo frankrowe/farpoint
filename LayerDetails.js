@@ -192,19 +192,21 @@ export default class LayerDetails extends Component {
       if (submission) {
         const insertSuccess = await db.insert(submission);
         this.setState({ working: false });
-        if (insertSuccess) {
-          requestAnimationFrame(() => {
-            Alert.alert('Success', 'Location has been updated.', [{ text: 'OK' }]);
-          });
-        } else {
-          requestAnimationFrame(() => {
-            Alert.alert(
-              'Saved',
-              "This update was unable to be uploaded. It's been saved, and you can attempt to sync at a later time.",
-              [{ text: 'OK' }]
-            );
-          });
-        }
+        setTimeout(() => {
+          if (insertSuccess) {
+            requestAnimationFrame(() => {
+              Alert.alert('Success', 'Location has been updated.', [{ text: 'OK' }]);
+            });
+          } else {
+            requestAnimationFrame(() => {
+              Alert.alert(
+                'Saved',
+                "This update was unable to be uploaded. It's been saved, and you can attempt to sync at a later time.",
+                [{ text: 'OK' }]
+              );
+            });
+          }
+        }, 200);
       } else {
         this.setState({ working: false });
         requestAnimationFrame(() => {
