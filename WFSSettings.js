@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Text, View, ActivityIndicator, StyleSheet, Modal, Platform } from 'react-native';
+import { Button, Text, View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import * as db from './db';
 import { blue, orange, gray, darkGray } from './styles';
 import { NavigationActions } from 'react-navigation';
@@ -111,33 +111,13 @@ export default class WFSSettings extends Component {
             <Text style={styles.note}>Refresh Layers and Metadata for this Server.</Text>
           </View>
         </View>
-        <Modal visible={this.state.refreshing} transparent>
-          <View style={styles.modalContainer}>
-            <View style={styles.modal}>
-              <ActivityIndicator size="large" />
-            </View>
-          </View>
-        </Modal>
+        {this.state.refreshing && <Loading loading={this.state.refreshing} />}
       </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modal: {
-    backgroundColor: 'white',
-    width: 100,
-    height: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Platform.OS === 'ios' ? 10 : 2,
-  },
   button: {
     flexDirection: 'row',
     justifyContent: 'space-between',

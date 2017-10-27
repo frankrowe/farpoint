@@ -73,11 +73,13 @@ export default class CreateMenu extends Component {
           style={[styles.button, { backgroundColor: orange }]}
           onPress={this.onPressAdd}
         >
-          {adding ? (
-            <Icon name="md-checkmark" size={25} color={'white'} />
-          ) : (
-            <Icon name="md-add" size={25} color={'white'} />
-          )}
+          <View>
+            {adding ? (
+              <Icon name="md-checkmark" size={25} color={'white'} />
+            ) : (
+              <Icon name="md-add" size={25} color={'white'} />
+            )}
+          </View>
         </TouchableOpacity>
       </View>
     );

@@ -103,7 +103,6 @@ export const refreshToken = async wfs => {
       body: `grant_type=refresh_token&refresh_token=${token.refresh_token}`,
     });
     const json = await response.json();
-    console.log(json);
     if (json.access_token) {
       return json;
     } else {

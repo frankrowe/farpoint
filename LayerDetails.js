@@ -7,7 +7,6 @@ import {
   Dimensions,
   InteractionManager,
   FlatList,
-  Modal,
   Platform,
   StyleSheet,
   Text,
@@ -23,6 +22,7 @@ import { throttle, debounce } from 'lodash';
 import FeatureCount from './FeatureCount';
 import FeatureDetails from './FeatureDetails';
 import FAnnotation, { FAnnotationView } from './FAnnotation';
+import Loading from './Loading';
 import CreateMenu from './CreateMenu';
 import { blue, orange, lightOrange, green, gray, darkGray } from './styles';
 import * as wfs from './wfs';
@@ -292,7 +292,6 @@ export default class LayerDetails extends Component {
 
   selectFeature = (feature, unsynced) => {
     const newState = {};
-    console.log(feature);
     if (unsynced) {
       feature.unsynced = true;
       newState.selectedFeature = feature;
@@ -300,7 +299,6 @@ export default class LayerDetails extends Component {
         newState.unSyncedFeatureCollection = {
           type: 'FeatureCollection',
           features: this.state.unSyncedFeatureCollection.features.map(f => {
-            console.log(f);
             if (f.id === feature.id) {
               f.properties.selected = true;
             } else {
@@ -672,13 +670,7 @@ export default class LayerDetails extends Component {
               />
             </View>
           )}
-        <Modal visible={this.state.working} transparent onRequestClose={() => {}}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modal}>
-              <ActivityIndicator size="large" />
-            </View>
-          </View>
-        </Modal>
+        {this.state.working && <Loading loading={this.state.working} />}
       </View>
     );
   }
@@ -770,19 +762,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
-  },
-  modalContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modal: {
-    backgroundColor: 'white',
-    width: 100,
-    height: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Platform.OS === 'ios' ? 10 : 2,
   },
 });

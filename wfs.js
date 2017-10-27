@@ -238,7 +238,6 @@ const createInsertPayload = (layer, point) => {
 };
 
 const createUpdatePayload = (layer, point) => {
-  console.log(point);
   const metadata = JSON.parse(layer.metadata);
   const schema = metadata.schema;
   const namespaceName = Object.keys(metadata.namespace)[0];

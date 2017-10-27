@@ -204,7 +204,6 @@ export const syncWFS = wfs => {
 };
 
 export const insert = async submission => {
-  console.log('inserting submission', submission);
   const point = JSON.parse(submission.point);
   const operation = submission.operation;
   const layer = submission.layer[0];
@@ -220,7 +219,6 @@ export const insert = async submission => {
 };
 
 export const save = (layer, point, operation = 'insert') => {
-  console.log('saving', layer, point, operation);
   let submission;
   try {
     realm.write(() => {
@@ -335,7 +333,6 @@ const connectionListener = () => {
 
 const stateListener = () => {
   AppState.addEventListener('change', nextAppState => {
-    console.log(nextAppState);
     if (currentState.match(/inactive|background/) && nextAppState === 'active') {
       refreshExchangeTokens();
     }

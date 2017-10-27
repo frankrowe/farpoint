@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   Button,
-  Modal,
   Platform,
   Text,
   TextInput,
@@ -13,6 +12,7 @@ import {
 import { NavigationActions } from 'react-navigation';
 import * as db from './db';
 import * as exchange from './exchange';
+import Loading from './Loading';
 import { blue, orange, gray, darkGray } from './styles';
 
 class WFSAuth extends Component {
@@ -117,13 +117,7 @@ class WFSAuth extends Component {
             />
           </View>
         </View>
-        <Modal visible={this.state.loading} transparent onRequestClose={() => {}}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modal}>
-              <ActivityIndicator size="large" />
-            </View>
-          </View>
-        </Modal>
+        {this.state.loading && <Loading loading={this.state.loading} />}
       </View>
     );
   }
@@ -161,20 +155,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: Platform.OS === 'ios' ? 0 : 8,
     marginLeft: -8,
-  },
-  modalContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modal: {
-    backgroundColor: 'white',
-    width: 100,
-    height: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Platform.OS === 'ios' ? 10 : 2,
   },
 });
 
