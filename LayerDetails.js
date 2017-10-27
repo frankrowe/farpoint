@@ -4,6 +4,7 @@ import {
   Alert,
   Button,
   Image,
+  Dimensions,
   InteractionManager,
   FlatList,
   Modal,
@@ -117,7 +118,14 @@ export default class LayerDetails extends Component {
     }
     const operation = 'insert';
     requestAnimationFrame(() => {
-      navigate('Form', { layer, wfs, feature, operation, makeAnnotations: this.makeAnnotations });
+      navigate('Form', {
+        layer,
+        wfs,
+        feature,
+        operation,
+        makeAnnotations: this.makeAnnotations,
+        selectFeature: this.selectFeature,
+      });
     });
   };
 
@@ -225,7 +233,14 @@ export default class LayerDetails extends Component {
     const { layer, wfs } = this.props.navigation.state.params;
     const feature = this.state.selectedFeature;
     const operation = 'update';
-    navigate('Form', { layer, wfs, feature, operation, makeAnnotations: this.makeAnnotations });
+    navigate('Form', {
+      layer,
+      wfs,
+      feature,
+      operation,
+      makeAnnotations: this.makeAnnotations,
+      selectFeature: this.selectFeature,
+    });
   };
 
   onPressDelete = () => {
@@ -254,60 +269,47 @@ export default class LayerDetails extends Component {
 
   onMapPress = async e => {
     const { screenPointX, screenPointY } = e.properties;
-
     let featureCollection = await this._map.queryRenderedFeaturesInRect(
-      [screenPointY + 10, screenPointX + 10, screenPointY - 10, screenPointX - 10],
+      [screenPointY + 23, screenPointX + 23, screenPointY - 23, screenPointX - 23],
       null,
       ['pointLayer']
     );
 
     let featureCollectionUnsynced = await this._map.queryRenderedFeaturesInRect(
-      [screenPointY + 10, screenPointX + 10, screenPointY - 10, screenPointX - 10],
+      [screenPointY + 23, screenPointX + 23, screenPointY - 23, screenPointX - 23],
       null,
       ['pointsUnsynced']
     );
 
     if (featureCollection.features.length) {
-      const newState = {
-        selectedFeature: featureCollection.features[0],
-      };
-      newState.geojson = {
-        type: 'FeatureCollection',
-        features: this.state.geojson.features.map(f => {
-          if (f.id === featureCollection.features[0].id) {
-            f.properties.selected = true;
-          } else {
-            delete f.properties.selected;
-          }
-          return f;
-        }),
-      };
+      this.selectFeature(featureCollection.features[0], false);
+    } else if (featureCollectionUnsynced.features.length) {
+      this.selectFeature(featureCollectionUnsynced.features[0], true);
+    } else {
+      this.deselectFeature();
+    }
+  };
+
+  selectFeature = (feature, unsynced) => {
+    const newState = {};
+    console.log(feature);
+    if (unsynced) {
+      feature.unsynced = true;
+      newState.selectedFeature = feature;
       if (this.state.unSyncedFeatureCollection) {
         newState.unSyncedFeatureCollection = {
           type: 'FeatureCollection',
           features: this.state.unSyncedFeatureCollection.features.map(f => {
-            delete f.properties.selected;
+            console.log(f);
+            if (f.id === feature.id) {
+              f.properties.selected = true;
+            } else {
+              delete f.properties.selected;
+            }
             return f;
           }),
         };
       }
-      this.setState(newState);
-    } else if (featureCollectionUnsynced.features.length) {
-      const newState = {};
-      const selectedFeature = featureCollectionUnsynced.features[0];
-      selectedFeature.unsynced = true;
-      newState.selectedFeature = selectedFeature;
-      newState.unSyncedFeatureCollection = {
-        type: 'FeatureCollection',
-        features: this.state.unSyncedFeatureCollection.features.map(f => {
-          if (f.id === featureCollectionUnsynced.features[0].id) {
-            f.properties.selected = true;
-          } else {
-            delete f.properties.selected;
-          }
-          return f;
-        }),
-      };
       if (this.state.geojson) {
         newState.geojson = {
           type: 'FeatureCollection',
@@ -317,10 +319,32 @@ export default class LayerDetails extends Component {
           }),
         };
       }
-      this.setState(newState);
     } else {
-      this.deselectFeature();
+      newState.selectedFeature = feature;
+      if (this.state.geojson) {
+        newState.geojson = {
+          type: 'FeatureCollection',
+          features: this.state.geojson.features.map(f => {
+            if (f.id === feature.id) {
+              f.properties.selected = true;
+            } else {
+              delete f.properties.selected;
+            }
+            return f;
+          }),
+        };
+      }
+      if (this.state.unSyncedFeatureCollection) {
+        newState.unSyncedFeatureCollection = {
+          type: 'FeatureCollection',
+          features: this.state.unSyncedFeatureCollection.features.map(f => {
+            delete f.properties.selected;
+            return f;
+          }),
+        };
+      }
     }
+    this.setState(newState);
   };
 
   deselectFeature = () => {
@@ -392,15 +416,18 @@ export default class LayerDetails extends Component {
       f.type = 'Feature';
       return f;
     });
-    console.log(unSyncedFeatures.length);
+
     const unSyncedFeatureCollection = {
       type: 'FeatureCollection',
       features: unSyncedFeatures,
     };
     newState.unSyncedFeatureCollection = unSyncedFeatureCollection;
-
     newState.loading = false;
-    this.setState(newState);
+    this.setState(newState, () => {
+      if (this.state.selectedFeature) {
+        this.selectFeature(this.state.selectedFeature, this.state.selectedFeature.unsynced);
+      }
+    });
   };
 
   zoomToLayerBounds = () => {

@@ -27,16 +27,26 @@ class Form extends React.Component {
   }
   async saveForm(formData) {
     this.setState({ submitting: true });
-    const { layer, feature, operation, makeAnnotations } = this.props.navigation.state.params;
+    const {
+      layer,
+      feature,
+      operation,
+      makeAnnotations,
+      selectFeature,
+    } = this.props.navigation.state.params;
     const gj = {
-      id: feature.id,
-      geometry: feature.geometry,
+      ...feature,
       properties: formData,
     };
+    console.log(feature, gj);
     if (feature.unsynced) {
       const success = db.updateSubmission(gj);
       this.setState({ submitting: false });
       if (success) {
+        if (selectFeature) {
+          gj.unsynced = true;
+          selectFeature(gj, true);
+        }
         if (makeAnnotations) {
           makeAnnotations();
         }
@@ -49,16 +59,27 @@ class Form extends React.Component {
       if (submission) {
         const insertSuccess = await db.insert(submission);
         this.setState({ submitting: false });
+        if (selectFeature) {
+          if (!insertSuccess) {
+            selectFeature({ ...gj, id: submission.id }, true);
+          } else {
+            selectFeature(gj, false);
+          }
+        }
         if (makeAnnotations) {
           makeAnnotations();
         }
-        if (insertSuccess) {
-          this.scform.formSubmitted();
-        } else {
-          this.scform.formSubmittedOffline();
-        }
+        setTimeout(() => {
+          if (insertSuccess) {
+            this.scform.formSubmitted();
+          } else {
+            this.scform.formSubmittedOffline();
+          }
+        }, 200);
       } else {
-        this.scform.formSubmittedError();
+        setTimeout(() => {
+          this.scform.formSubmittedError();
+        }, 200);
       }
     }
   }
