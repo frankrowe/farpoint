@@ -650,6 +650,8 @@ export default class LayerDetails extends Component {
           onPress={this.onMapPress}
           onRegionDidChange={this.onRegionDidChange}
           showUserLocation={this.state.trackingLocation}
+          rotateEnabled={false}
+          pitchEnabled={false}
         >
           {this.renderPoints()}
           {this.renderPointsUnsynced()}
