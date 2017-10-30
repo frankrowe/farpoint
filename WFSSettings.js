@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Text, View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
+import Loading from './Loading';
 import * as db from './db';
 import { blue, orange, gray, darkGray } from './styles';
 import { NavigationActions } from 'react-navigation';
