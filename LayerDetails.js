@@ -68,7 +68,6 @@ const layerStyles = MapboxGL.StyleSheet.create({
   },
 });
 
-let self;
 export default class LayerDetails extends Component {
   state = {
     renderPlaceholderOnly: true,
@@ -88,11 +87,6 @@ export default class LayerDetails extends Component {
   static navigationOptions = ({ navigation }) => ({
     title: JSON.parse(navigation.state.params.layer.metadata).Title,
   });
-
-  constructor(props) {
-    super(props);
-    self = this;
-  }
 
   onAddData = e => {
     const { navigate } = this.props.navigation;
