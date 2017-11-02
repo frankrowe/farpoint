@@ -119,6 +119,7 @@ export default class LayerDetails extends Component {
         operation,
         makeAnnotations: this.makeAnnotations,
         selectFeature: this.selectFeature,
+        deselectFeature: this.deselectFeature,
       });
     });
   };
@@ -234,6 +235,7 @@ export default class LayerDetails extends Component {
       operation,
       makeAnnotations: this.makeAnnotations,
       selectFeature: this.selectFeature,
+      deselectFeature: this.deselectFeature,
     });
   };
 
@@ -397,9 +399,25 @@ export default class LayerDetails extends Component {
     const metadata = JSON.parse(layer.metadata);
     this.setState({ loading: true });
     const newState = {};
-    const featureCollection = await wfs.getFeatures(this.props.navigation.state.params.wfs, layer);
-    if (featureCollection) {
-      newState.geojson = featureCollection;
+    if (layer.features.length) {
+      //console.time('parsefeatures');
+      const features = layer.features.map(f => JSON.parse(f.geojson));
+      //console.timeEnd('parsefeatures');
+      const featureCollection = {
+        ...emptyFeatureCollection,
+        features,
+      };
+      if (featureCollection) {
+        newState.geojson = featureCollection;
+      }
+    } else {
+      const featureCollection = await wfs.getFeatures(
+        this.props.navigation.state.params.wfs,
+        layer
+      );
+      if (featureCollection) {
+        newState.geojson = featureCollection;
+      }
     }
 
     const unSyncedFeatures = layer.submissions.filter(s => !s.insert_success).map(s => {
@@ -427,6 +445,7 @@ export default class LayerDetails extends Component {
     const metadata = JSON.parse(layer.metadata);
     setTimeout(() => {
       if (this._map) {
+        console.log('fitBounds', metadata.bbox);
         this._map.fitBounds(
           [+metadata.bbox[0], +metadata.bbox[1]],
           [+metadata.bbox[2], +metadata.bbox[3]],
@@ -434,7 +453,7 @@ export default class LayerDetails extends Component {
           0
         );
       }
-    }, 500);
+    }, 1000);
   };
 
   deleteFeature = async () => {

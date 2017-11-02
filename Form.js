@@ -33,18 +33,21 @@ class Form extends React.Component {
       operation,
       makeAnnotations,
       selectFeature,
+      deselectFeature,
     } = this.props.navigation.state.params;
     const gj = {
       ...feature,
+      type: 'Feature',
       properties: formData,
     };
     if (feature.unsynced) {
       const success = db.updateSubmission(gj);
       this.setState({ submitting: false });
       if (success) {
-        if (selectFeature) {
-          gj.unsynced = true;
-          selectFeature(gj, true);
+        if (deselectFeature) {
+          // gj.unsynced = true;
+          // selectFeature(gj, true);
+          deselectFeature();
         }
         if (makeAnnotations) {
           makeAnnotations();
@@ -58,12 +61,15 @@ class Form extends React.Component {
       if (submission) {
         const insertSuccess = await db.insert(submission);
         this.setState({ submitting: false });
-        if (selectFeature) {
-          if (!insertSuccess) {
-            selectFeature({ ...gj, id: submission.id }, true);
-          } else {
-            selectFeature(gj, false);
+        if (deselectFeature) {
+          if (insertSuccess) {
+            deselectFeature();
           }
+          // if (!insertSuccess) {
+          //   selectFeature({ ...gj, id: submission.id }, true);
+          // } else {
+          //   selectFeature(gj, false);
+          // }
         }
         if (makeAnnotations) {
           makeAnnotations();

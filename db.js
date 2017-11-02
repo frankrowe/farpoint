@@ -52,13 +52,14 @@ const FeatureSchema = {
   properties: {
     id: 'string',
     geojson: 'string',
+    layer: { type: 'linkingObjects', objectType: 'Layer', property: 'features' },
   },
 };
 
 //single exported Realm instance
 export const realm = new Realm({
   schema: [WFSSchema, LayerSchema, SubmissionSchema, FeatureSchema],
-  schemaVersion: 1,
+  schemaVersion: 2,
   migration: (oldRealm, newRealm) => {
     if (oldRealm.schemaVersion < 1) {
       const oldObjects = oldRealm.objects('Submission');
@@ -181,6 +182,33 @@ export const saveWFS = async (wfsUrl, user, password) => {
   }
 };
 
+export const downloadFeatures = async layer => {
+  try {
+    const featureCollection = await wfs.getFeatures(layer.wfs[0], layer);
+    const features = featureCollection.features.map(f => ({
+      id: f.id,
+      geojson: JSON.stringify(f),
+    }));
+    realm.write(() => {
+      layer.features = features;
+    });
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const deleteFeatures = layer => {
+  try {
+    realm.write(() => {
+      layer.features = [];
+    });
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
 export const deleteObject = realmObject => {
   try {
     if (realm.isInTransaction) {
@@ -210,7 +238,7 @@ export const insert = async submission => {
   const _wfs = layer.wfs[0];
   const success = await wfs.postTransaction(_wfs, layer, point, operation);
   if (success) {
-    insertSuccessful(submission);
+    insertSuccessful(submission, success);
     return true;
   } else {
     insertFailure(submission);
@@ -278,8 +306,47 @@ export const deleteSubmission = point => {
 
 export const deleteFeature = async (layer, point) => {
   const _wfs = layer.wfs[0];
-  const success = await wfs.postTransaction(_wfs, layer, point, 'delete');
+  let success = await wfs.postTransaction(_wfs, layer, point, 'delete');
+  if (success && layer.features.length) {
+    success = deleteFeatureCache(layer, point);
+  }
   return success;
+};
+
+export const deleteFeatureCache = (layer, point) => {
+  realm.write(() => {
+    layer.features = layer.features.filter(f => f.id !== point.id);
+  });
+  return true;
+};
+
+export const updateFeatureCache = (submission, featureId) => {
+  const layer = submission.layer[0];
+  const wfs = layer.wfs[0];
+  const feature = JSON.parse(submission.point);
+  realm.write(() => {
+    if (submission.operation === 'insert') {
+      const newFeature = {
+        id: featureId,
+        ...feature,
+      };
+      layer.features.push({
+        id: featureId,
+        geojson: JSON.stringify(newFeature),
+      });
+    } else if (submission.operation === 'update') {
+      layer.features = layer.features.map(f => {
+        if (f.id === feature.id) {
+          return {
+            ...f,
+            geojson: JSON.stringify(feature),
+          };
+        }
+        return f;
+      });
+    }
+  });
+  return true;
 };
 
 // Private methods
@@ -292,8 +359,9 @@ const insertAll = () => {
   });
 };
 
-const insertSuccessful = submission => {
+const insertSuccessful = (submission, featureId) => {
   console.log('insertSuccessful');
+  updateFeatureCache(submission, featureId);
   if (realm.isInTransaction) {
     submission.insert_success = true;
     submission.insert_attempts = submission.insert_attempts + 1;

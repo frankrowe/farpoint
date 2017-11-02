@@ -1,5 +1,13 @@
 import React, { Component } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { NavigationActions } from 'react-navigation';
 import * as db from './db';
 import { blue, orange, gray, darkGray } from './styles';
@@ -9,14 +17,46 @@ const FormCell = props => {
   const metadata = JSON.parse(props.layer.metadata);
   return (
     <View>
-      <TouchableOpacity onPress={props.onSelect}>
-        <View style={styles.cellRow}>
-          <Text style={styles.cellName} numberOfLines={1}>
-            {metadata.Title}
-          </Text>
-          <Text style={styles.cellSubtitle}>Submissions: {props.layer.submissions.length}</Text>
+      <View style={styles.cellRow}>
+        <View style={styles.cellContent}>
+          <TouchableOpacity onPress={props.onSelect}>
+            <Text style={styles.cellName} numberOfLines={1}>
+              {metadata.Title}
+            </Text>
+            <Text style={styles.cellSubtitle}>Submissions: {props.layer.submissions.length}</Text>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+
+        {props.status === 'download' && (
+          <View style={styles.cellRowIcons}>
+            <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDownload}>
+              <Icon name="md-download" size={20} color={'#aaa'} />
+            </TouchableOpacity>
+          </View>
+        )}
+        {props.status === 'offline' && (
+          <View style={styles.cellRowIcons}>
+            <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDownload}>
+              <Icon name="md-refresh" size={20} color={'#aaa'} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDelete}>
+              <Icon name="md-trash" size={20} color={'#aaa'} />
+            </TouchableOpacity>
+          </View>
+        )}
+        {props.status === 'loading' && (
+          <View style={styles.cellRowIcons}>
+            <ActivityIndicator />
+          </View>
+        )}
+        {props.status === 'fail' && (
+          <View style={styles.cellRowIcons}>
+            <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDownload}>
+              <Icon name="md-close" size={20} color={red} />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     </View>
   );
 };
@@ -49,9 +89,53 @@ export default class LayerList extends Component {
     ),
   });
 
-  state = { submissions: {} };
+  state = { layerStatus: {} };
 
-  keyExtractor = item => item.id;
+  keyExtractor = item => item.key;
+
+  onDownload = async layer => {
+    this.setState(
+      {
+        layerStatus: {
+          ...this.state.layerStatus,
+          [layer.key]: 'loading',
+        },
+      },
+      async () => {
+        const success = await db.downloadFeatures(layer);
+        this.setState({
+          layerStatus: {
+            ...this.state.layerStatus,
+            [layer.key]: success ? 'offline' : 'fail',
+          },
+        });
+      }
+    );
+  };
+
+  onDelete = layer => {
+    db.deleteFeatures(layer);
+    this.setState({
+      layerStatus: {
+        ...this.state.layerStatus,
+        [layer.key]: 'download',
+      },
+    });
+  };
+
+  componentWillMount() {
+    const { wfs } = this.props.navigation.state.params;
+    const layerStatus = {};
+    wfs.layers.forEach(layer => {
+      layerStatus[layer.key] = layer.features.length ? 'offline' : 'download';
+    });
+    this.setState({
+      layerStatus: {
+        ...this.state.layerStatus,
+        ...layerStatus,
+      },
+    });
+  }
 
   render() {
     const { navigate } = this.props.navigation;
@@ -67,9 +151,12 @@ export default class LayerList extends Component {
           renderItem={({ item }) => (
             <FormCell
               layer={item}
+              status={this.state.layerStatus[item.key]}
               onSelect={() => {
                 navigate('LayerDetails', { layer: item, wfs });
               }}
+              onDownload={() => this.onDownload(item)}
+              onDelete={() => this.onDelete(item)}
             />
           )}
           keyExtractor={this.keyExtractor}
@@ -112,14 +199,32 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   cellRow: {
+    justifyContent: 'flex-end',
+    flexDirection: 'row',
+    marginLeft: 16,
+    paddingRight: 16,
+    borderBottomColor: darkGray,
+    borderBottomWidth: 1,
+  },
+  cellRowIcons: {
+    flex: 0.1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  cellRowIcon: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  cellContent: {
+    flex: 0.9,
     paddingTop: 8,
     paddingBottom: 8,
     alignItems: 'flex-start',
     justifyContent: 'center',
     flexDirection: 'column',
-    marginLeft: 16,
-    borderBottomColor: darkGray,
-    borderBottomWidth: 1,
   },
   iconStyle: {
     paddingRight: 16,
