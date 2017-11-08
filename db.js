@@ -33,7 +33,7 @@ const LayerSchema = {
     metadata: 'string',
     offlineKey: 'string',
     features: { type: 'list', objectType: 'Feature' },
-    featuresUpdated: 'date',
+    featuresUpdated: { type: 'date', optional: true },
     submissions: { type: 'list', objectType: 'Submission' },
     wfs: { type: 'linkingObjects', objectType: 'WFS', property: 'layers' },
   },
@@ -66,7 +66,7 @@ const FeatureSchema = {
 //single exported Realm instance
 export const realm = new Realm({
   schema: [WFSSchema, LayerSchema, SubmissionSchema, FeatureSchema],
-  schemaVersion: 4,
+  schemaVersion: 5,
   migration: (oldRealm, newRealm) => {
     if (oldRealm.schemaVersion < 1) {
       const oldObjects = oldRealm.objects('Submission');
