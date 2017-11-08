@@ -19,7 +19,7 @@
     "react-native-swipeout": "2.3.1",
     "react-native-uuid": "1.4.9",
     "react-native-vector-icons": "^4.4.0",
-    "react-navigation": "1.0.0-beta.11",
+    "react-navigation": "1.0.0-beta.19",
     "realm": "2.0.1",
     "spatialconnect-form-schema": "3.0.7",
     "stream": "0.0.2",
@@ -38,6 +38,8 @@
   },
   "jest": {
     "preset": "react-native",
-    "setupFiles": ["./setupTests.js"]
+    "setupFiles": [
+      "./setupTests.js"
+    ]
   }
 }

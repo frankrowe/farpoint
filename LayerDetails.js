@@ -655,7 +655,9 @@ export default class LayerDetails extends Component {
           ref={map => {
             this._map = map;
           }}
-          styleURL={'https://chopper.boundlessgeo.io/style/osm-liberty/osm-liberty.json'}
+          styleURL={
+            this.state.useSatellite ? MapboxGL.StyleURL.SatelliteStreet : MapboxGL.StyleURL.Street
+          }
           style={styles.map}
           onPress={this.onMapPress}
           onRegionDidChange={this.onRegionDidChange}
