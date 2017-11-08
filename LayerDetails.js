@@ -16,8 +16,6 @@ import {
 import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MapSkin from './MapSkin';
-import turfInside from '@turf/inside';
-import bboxPolygon from '@turf/bbox-polygon';
 import { throttle, debounce } from 'lodash';
 import FeatureCount from './FeatureCount';
 import FeatureDetails from './FeatureDetails';
@@ -129,6 +127,7 @@ export default class LayerDetails extends Component {
   };
 
   onRegionDidChange = e => {
+    console.log(e.properties.zoomLevel);
     this.setState({ centerCoordinate: e.geometry.coordinates });
   };
 
@@ -656,9 +655,7 @@ export default class LayerDetails extends Component {
           ref={map => {
             this._map = map;
           }}
-          styleURL={
-            this.state.useSatellite ? MapboxGL.StyleURL.SatelliteStreet : MapboxGL.StyleURL.Street
-          }
+          styleURL={'https://chopper.boundlessgeo.io/style/osm-liberty/osm-liberty.json'}
           style={styles.map}
           onPress={this.onMapPress}
           onRegionDidChange={this.onRegionDidChange}

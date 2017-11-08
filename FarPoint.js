@@ -13,6 +13,7 @@ import {
 import Realm from 'realm';
 import uuid from 'react-native-uuid';
 import Icon from 'react-native-vector-icons/Ionicons';
+import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import LayerList from './LayerList';
 import WFSList from './WFSList';
 import FButton from './FButton';
@@ -63,6 +64,17 @@ export default class FarPoint extends Component {
         console.warn(err);
       }
     }
+  }
+
+  componentDidMount() {
+    const getpacks = async () => {
+      const offlinePacks = await MapboxGL.offlineManager.getPacks();
+      offlinePacks.forEach(pack => {
+        console.log(pack);
+        MapboxGL.offlineManager.deletePack(pack.name);
+      });
+    };
+    //getpacks();
   }
 
   render() {

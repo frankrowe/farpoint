@@ -1,9 +1,14 @@
 import Realm from 'realm';
 import { AppState, NetInfo } from 'react-native';
+import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import uuid from 'react-native-uuid';
+import turfArea from '@turf/area';
+import bboxPolygon from '@turf/bbox-polygon';
 import { find } from 'lodash';
 import * as wfs from './wfs';
 import * as exchange from './exchange';
+
+//MapboxGL.offlineManager.setTileCountLimit(1000);
 
 const WFSSchema = {
   name: 'WFS',
@@ -26,7 +31,9 @@ const LayerSchema = {
     id: 'string',
     key: 'string',
     metadata: 'string',
+    offlineKey: 'string',
     features: { type: 'list', objectType: 'Feature' },
+    featuresUpdated: 'date',
     submissions: { type: 'list', objectType: 'Submission' },
     wfs: { type: 'linkingObjects', objectType: 'WFS', property: 'layers' },
   },
@@ -59,13 +66,29 @@ const FeatureSchema = {
 //single exported Realm instance
 export const realm = new Realm({
   schema: [WFSSchema, LayerSchema, SubmissionSchema, FeatureSchema],
-  schemaVersion: 2,
+  schemaVersion: 4,
   migration: (oldRealm, newRealm) => {
     if (oldRealm.schemaVersion < 1) {
       const oldObjects = oldRealm.objects('Submission');
       const newObjects = newRealm.objects('Submission');
       for (let i = 0; i < oldObjects.length; i++) {
         newObjects[i].created = new Date();
+      }
+    }
+    if (oldRealm.schemaVersion < 3) {
+      const oldObjects = oldRealm.objects('Layer');
+      const newObjects = newRealm.objects('Layer');
+      for (let i = 0; i < oldObjects.length; i++) {
+        newObjects[i].offlineKey = '';
+      }
+    }
+    if (oldRealm.schemaVersion < 4) {
+      const oldObjects = oldRealm.objects('Layer');
+      const newObjects = newRealm.objects('Layer');
+      for (let i = 0; i < oldObjects.length; i++) {
+        if (oldObjects[i].features.length) {
+          newObjects[i].featuresUpdated = new Date();
+        }
       }
     }
   },
@@ -77,7 +100,7 @@ let currentState = AppState.currentState;
 let isConnected = false;
 NetInfo.getConnectionInfo().then(async connectionInfo => {
   console.log(
-    'Initial, type: ' + connectionInfo.type + ', effectiveType: ' + connectionInfo.effectiveType
+    'Initial,  type: ' + connectionInfo.type + ', effectiveType: ' + connectionInfo.effectiveType
   );
 });
 export const monitor = () => {
@@ -89,6 +112,7 @@ export const monitor = () => {
 export const newLayer = layer => ({
   id: uuid.v1(),
   key: layer.layer_key,
+  offlineKey: '',
   metadata: JSON.stringify(layer),
   submissions: [],
   features: [],
@@ -182,6 +206,54 @@ export const saveWFS = async (wfsUrl, user, password) => {
   }
 };
 
+export const downloadBasemap = (layer, next) => {
+  const metadata = JSON.parse(layer.metadata);
+  const bbox = [[+metadata.bbox[0], +metadata.bbox[1]], [+metadata.bbox[2], +metadata.bbox[3]]];
+  const polygon = bboxPolygon([
+    +metadata.bbox[0],
+    +metadata.bbox[1],
+    +metadata.bbox[2],
+    +metadata.bbox[3],
+  ]);
+  console.log(JSON.stringify(polygon));
+  const area = turfArea(polygon);
+  console.log(area);
+  const offlineKey = uuid.v1();
+  realm.write(() => {
+    layer.offlineKey = offlineKey;
+  });
+  return new Promise((resolve, reject) => {
+    const progressListener = (offlineRegion, status) => {
+      next(status);
+      if (status.state === 3) {
+        resolve(true);
+      }
+    };
+    const errorListener = (offlineRegion, err) => {
+      console.log(offlineRegion, err);
+      reject(err);
+    };
+
+    MapboxGL.offlineManager.createPack(
+      {
+        name: offlineKey,
+        styleURL: 'https://chopper.boundlessgeo.io/style/osm-liberty/osm-liberty.json',
+        minZoom: 8,
+        maxZoom: 12,
+        bounds: bbox,
+      },
+      progressListener,
+      errorListener
+    );
+  });
+};
+
+export const deleteBasemap = async layer => {
+  await MapboxGL.offlineManager.deletePack(layer.offlineKey);
+  MapboxGL.offlineManager.unsubscribe(layer.offlineKey);
+  return true;
+};
+
 export const downloadFeatures = async layer => {
   try {
     const featureCollection = await wfs.getFeatures(layer.wfs[0], layer);
@@ -191,19 +263,22 @@ export const downloadFeatures = async layer => {
     }));
     realm.write(() => {
       layer.features = features;
+      layer.featuresUpdated = new Date();
     });
     return true;
   } catch (error) {
+    console.log('download error', error);
     return false;
   }
 };
 
-export const deleteFeatures = layer => {
+export const deleteFeatures = async layer => {
   try {
     realm.write(() => {
       layer.features = [];
     });
-    return true;
+    const success = await deleteBasemap(layer);
+    return success;
   } catch (error) {
     return false;
   }

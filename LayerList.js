@@ -8,56 +8,80 @@ import {
   View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Swipeout from 'react-native-swipeout';
 import { NavigationActions } from 'react-navigation';
+import { format, distanceInWordsStrict } from 'date-fns';
 import * as db from './db';
-import { blue, orange, gray, darkGray } from './styles';
+import { blue, orange, gray, darkGray, red } from './styles';
 
 const FormCell = props => {
-  const unsaved = props.layer.submissions.filtered(`insert_success == false`);
   const metadata = JSON.parse(props.layer.metadata);
+  let subtext = `Submissions: ${props.layer.submissions.length}`;
+  if (props.layer.features.length && props.layer.featuresUpdated) {
+    subtext += ` Last Updated: ${distanceInWordsStrict(props.layer.featuresUpdated, new Date())}`;
+  }
   return (
-    <View>
-      <View style={styles.cellRow}>
-        <View style={styles.cellContent}>
-          <TouchableOpacity onPress={props.onSelect}>
-            <Text style={styles.cellName} numberOfLines={1}>
-              {metadata.Title}
-            </Text>
-            <Text style={styles.cellSubtitle}>Submissions: {props.layer.submissions.length}</Text>
-          </TouchableOpacity>
-        </View>
+    <Swipeout
+      style={styles.swipe}
+      right={[
+        {
+          text: 'Delete',
+          type: 'delete',
+          onPress: props.onDelete,
+        },
+      ]}
+      autoClose
+      disabled={props.status !== 'offline'}
+    >
+      <View>
+        <View style={styles.cellRow}>
+          <View style={styles.cellContent}>
+            <TouchableOpacity onPress={props.onSelect}>
+              <Text style={styles.cellName} numberOfLines={1}>
+                {metadata.Title}
+              </Text>
+              <Text style={styles.cellSubtitle}>{subtext}</Text>
+            </TouchableOpacity>
+          </View>
 
-        {props.status === 'download' && (
-          <View style={styles.cellRowIcons}>
-            <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDownload}>
-              <Icon name="md-download" size={20} color={'#aaa'} />
-            </TouchableOpacity>
-          </View>
-        )}
-        {props.status === 'offline' && (
-          <View style={styles.cellRowIcons}>
-            <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDownload}>
-              <Icon name="md-refresh" size={20} color={'#aaa'} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDelete}>
-              <Icon name="md-trash" size={20} color={'#aaa'} />
-            </TouchableOpacity>
-          </View>
-        )}
-        {props.status === 'loading' && (
-          <View style={styles.cellRowIcons}>
-            <ActivityIndicator />
-          </View>
-        )}
-        {props.status === 'fail' && (
-          <View style={styles.cellRowIcons}>
-            <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDownload}>
-              <Icon name="md-close" size={20} color={red} />
-            </TouchableOpacity>
-          </View>
-        )}
+          {props.status === 'download' && (
+            <View style={styles.cellRowIcons}>
+              <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDownload}>
+                <Icon name="md-download" size={30} color={'#aaa'} />
+              </TouchableOpacity>
+            </View>
+          )}
+          {props.status === 'offline' && (
+            <View style={styles.cellRowIcons}>
+              <TouchableOpacity style={styles.cellRowIcon} onPress={props.onRefresh}>
+                <Icon name="md-refresh" size={30} color={'#aaa'} />
+              </TouchableOpacity>
+            </View>
+          )}
+          {props.status === 'loading' && (
+            <View style={styles.cellRowIcons}>
+              <View style={styles.cellRowIcon}>
+                <ActivityIndicator />
+              </View>
+            </View>
+          )}
+          {props.status === 'fail' && (
+            <View style={styles.cellRowIcons}>
+              <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDownload}>
+                <Icon name="md-close" size={20} color={red} />
+              </TouchableOpacity>
+            </View>
+          )}
+          {props.status.indexOf('%') > -1 && (
+            <View style={styles.cellRowIcons}>
+              <View style={styles.cellRowIcon}>
+                <Text style={styles.statusText}>{props.status}</Text>
+              </View>
+            </View>
+          )}
+        </View>
       </View>
-    </View>
+    </Swipeout>
   );
 };
 
@@ -102,6 +126,43 @@ export default class LayerList extends Component {
         },
       },
       async () => {
+        let success = await db.downloadBasemap(layer, status => {
+          this.setState({
+            layerStatus: {
+              ...this.state.layerStatus,
+              [layer.key]: status.percentage === 100 ? '99%' : `${status.percentage}%`,
+            },
+          });
+        });
+        if (success) {
+          success = await db.downloadFeatures(layer);
+          this.setState({
+            layerStatus: {
+              ...this.state.layerStatus,
+              [layer.key]: success ? 'offline' : 'fail',
+            },
+          });
+        } else {
+          this.setState({
+            layerStatus: {
+              ...this.state.layerStatus,
+              [layer.key]: 'fail',
+            },
+          });
+        }
+      }
+    );
+  };
+
+  onRefresh = async layer => {
+    this.setState(
+      {
+        layerStatus: {
+          ...this.state.layerStatus,
+          [layer.key]: 'loading',
+        },
+      },
+      async () => {
         const success = await db.downloadFeatures(layer);
         this.setState({
           layerStatus: {
@@ -114,13 +175,23 @@ export default class LayerList extends Component {
   };
 
   onDelete = layer => {
-    db.deleteFeatures(layer);
-    this.setState({
-      layerStatus: {
-        ...this.state.layerStatus,
-        [layer.key]: 'download',
+    this.setState(
+      {
+        layerStatus: {
+          ...this.state.layerStatus,
+          [layer.key]: 'loading',
+        },
       },
-    });
+      async () => {
+        const success = await db.deleteFeatures(layer);
+        this.setState({
+          layerStatus: {
+            ...this.state.layerStatus,
+            [layer.key]: success ? 'download' : 'fail',
+          },
+        });
+      }
+    );
   };
 
   componentWillMount() {
@@ -156,6 +227,7 @@ export default class LayerList extends Component {
                 navigate('LayerDetails', { layer: item, wfs });
               }}
               onDownload={() => this.onDownload(item)}
+              onRefresh={() => this.onRefresh(item)}
               onDelete={() => this.onDelete(item)}
             />
           )}
@@ -188,6 +260,7 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
+    backgroundColor: '#fff',
   },
   cellName: {
     fontSize: 16,
@@ -202,24 +275,31 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     flexDirection: 'row',
     marginLeft: 16,
-    paddingRight: 16,
     borderBottomColor: darkGray,
     borderBottomWidth: 1,
   },
   cellRowIcons: {
-    flex: 0.1,
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    alignItems: 'center',
+    alignItems: 'stretch',
     flexDirection: 'row',
   },
   cellRowIcon: {
-    flex: 1,
+    width: 52,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  statusText: {
+    fontSize: 10,
+    color: '#888',
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   cellContent: {
-    flex: 0.9,
+    flex: 1,
     paddingTop: 8,
     paddingBottom: 8,
     alignItems: 'flex-start',
@@ -228,5 +308,14 @@ const styles = StyleSheet.create({
   },
   iconStyle: {
     paddingRight: 16,
+  },
+  trashIcon: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column',
+  },
+  swipe: {
+    backgroundColor: '#fff',
   },
 });
