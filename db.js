@@ -249,7 +249,7 @@ export const downloadBasemap = (layer, next) => {
   return new Promise((resolve, reject) => {
     const progressListener = (offlineRegion, status) => {
       next(status);
-      if (status.state === 2 || status.state === 3) {
+      if (status.percentage === 100 || status.state === 3) {
         resolve(true);
       }
     };
