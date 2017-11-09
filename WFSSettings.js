@@ -118,7 +118,7 @@ export default class WFSSettings extends Component {
             </View>
             <Text style={styles.note}>
               Download new layers and metadata from this Exchange to your device. {'\n'}
-              {'\n'}Last updated: {distanceInWords(wfs.created, new Date())} ago
+              {'\n'}Last updated: {distanceInWords(wfs.updated, new Date())} ago
             </Text>
           </View>
         </View>

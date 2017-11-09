@@ -16,6 +16,7 @@ const WFSSchema = {
   properties: {
     id: 'string',
     created: 'date',
+    updated: 'date',
     url: 'string',
     user: 'string',
     password: 'string',
@@ -66,7 +67,7 @@ const FeatureSchema = {
 //single exported Realm instance
 export const realm = new Realm({
   schema: [WFSSchema, LayerSchema, SubmissionSchema, FeatureSchema],
-  schemaVersion: 5,
+  schemaVersion: 6,
   migration: (oldRealm, newRealm) => {
     if (oldRealm.schemaVersion < 1) {
       const oldObjects = oldRealm.objects('Submission');
@@ -89,6 +90,13 @@ export const realm = new Realm({
         if (oldObjects[i].features.length) {
           newObjects[i].featuresUpdated = new Date();
         }
+      }
+    }
+    if (oldRealm.schemaVersion < 6) {
+      const oldObjects = oldRealm.objects('WFS');
+      const newObjects = newRealm.objects('WFS');
+      for (let i = 0; i < oldObjects.length; i++) {
+        newObjects[i].updated = oldObjects[i].created;
       }
     }
   },
@@ -126,6 +134,7 @@ export const saveExchange = async (url, token, user, password) => {
       newWfs = realm.create('WFS', {
         id: uuid.v1(),
         created: new Date(),
+        updated: new Date(),
         url,
         user,
         password,
@@ -164,7 +173,7 @@ export const refreshWFS = async wfs => {
     const token = JSON.parse(wfs.token);
     const layers = await exchange.getLayers(wfs.url, token);
     realm.write(() => {
-      wfs.created = new Date();
+      wfs.updated = new Date();
       layers.forEach(layer => {
         const existingLayer = find(wfs.layers, { key: layer.layer_key });
         if (existingLayer) {
