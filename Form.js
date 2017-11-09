@@ -40,7 +40,6 @@ class Form extends React.Component {
       type: 'Feature',
       properties: formData,
     };
-    console.log(gj);
     if (feature.unsynced) {
       const success = db.updateSubmission(gj);
       this.setState({ submitting: false });
