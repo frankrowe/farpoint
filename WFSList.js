@@ -22,7 +22,7 @@ const WFSCell = props => {
             {props.wfs.url}
           </Text>
           <Text style={styles.cellSubtitle}>
-            User: {props.wfs.user} Layers: {props.wfs.layers.length} Submissions: {submissionCount}
+            User: {props.wfs.user} Layers: {props.wfs.layers.length} Changes: {submissionCount}
           </Text>
         </View>
       </TouchableOpacity>

@@ -137,7 +137,6 @@ export default class LayerDetails extends Component {
   };
 
   onRegionDidChange = e => {
-    console.log(e.properties.zoomLevel);
     this.setState({ centerCoordinate: e.geometry.coordinates });
   };
 
@@ -454,7 +453,6 @@ export default class LayerDetails extends Component {
     const metadata = JSON.parse(layer.metadata);
     setTimeout(() => {
       if (this._map) {
-        console.log('fitBounds', metadata.bbox);
         this._map.fitBounds(
           [+metadata.bbox[0], +metadata.bbox[1]],
           [+metadata.bbox[2], +metadata.bbox[3]],

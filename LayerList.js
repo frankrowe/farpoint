@@ -11,7 +11,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Swipeout from 'react-native-swipeout';
 import { NavigationActions } from 'react-navigation';
 import { withNavigationFocus } from 'react-navigation-is-focused-hoc';
-import { format, distanceInWordsToNow, distanceInWordsStrict } from 'date-fns';
+import { distanceInWords } from 'date-fns';
 import Color from 'color';
 import * as db from './db';
 import { blue, orange, gray, darkGray, red } from './styles';
@@ -22,12 +22,9 @@ const iconColor = Color(orange)
 
 const FormCell = props => {
   const metadata = JSON.parse(props.layer.metadata);
-  let subtext = `Submissions: ${props.layer.submissions.length}`;
+  let subtext = `Changes: ${props.layer.submissions.length}`;
   if (props.layer.features.length && props.layer.featuresUpdated) {
-    subtext += ` Last Updated: ${distanceInWordsStrict(
-      props.layer.featuresUpdated,
-      props.now
-    )} ago`;
+    subtext += ` Updated: ${distanceInWords(props.layer.featuresUpdated, props.now)} ago`;
   }
   return (
     <Swipeout

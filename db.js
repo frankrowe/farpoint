@@ -164,6 +164,7 @@ export const refreshWFS = async wfs => {
     const token = JSON.parse(wfs.token);
     const layers = await exchange.getLayers(wfs.url, token);
     realm.write(() => {
+      wfs.created = new Date();
       layers.forEach(layer => {
         const existingLayer = find(wfs.layers, { key: layer.layer_key });
         if (existingLayer) {

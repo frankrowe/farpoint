@@ -33,7 +33,9 @@ const ListCell = props => {
               {distanceInWordsStrict(props.item.created, new Date())} ago
             </Text>
           </Text>
-          <Text style={styles.cellSubtitle}>Layer: {metadata.Title}</Text>
+          <Text style={styles.cellSubtitle}>
+            Layer: {metadata.Title} {'\n'}Type: {props.item.operation}
+          </Text>
         </View>
         <View style={styles.cellRowIcon}>
           {props.status === 'upload' && (
@@ -57,7 +59,7 @@ const ListCell = props => {
 export default class Submissions extends Component {
   static navigationOptions = ({ navigation }) => {
     return {
-      title: 'Submissions',
+      title: 'Changes',
     };
   };
 
@@ -155,12 +157,30 @@ export default class Submissions extends Component {
     const submissions = wfs.layers.reduce((prev, layer) => {
       return prev.concat(Array.from(layer.submissions));
     }, []);
+    if (submissions.length == 0) {
+      return (
+        <View style={styles.container}>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', margin: 8 }}>
+            <Text style={styles.synced}>No changes to sync.</Text>
+          </View>
+        </View>
+      );
+    }
+    let synced = true;
+    for (let key in this.state.submissionStatus) {
+      if (this.state.submissionStatus[key] === 'upload') {
+        synced = false;
+      }
+    }
     return (
       <View style={styles.container}>
         <View style={{ flexDirection: 'row', justifyContent: 'center', margin: 8 }}>
-          <Button color={orange} title="Sync All" onPress={this.syncSubmissions} />
+          {synced ? (
+            <Text style={styles.synced}>All Synced</Text>
+          ) : (
+            <Button color={orange} title="Sync All" onPress={this.syncSubmissions} />
+          )}
         </View>
-        {this.state.syncing && <ActivityIndicator size="large" />}
         <FlatList
           data={submissions}
           extraData={this.state}
@@ -220,5 +240,9 @@ const styles = StyleSheet.create({
   },
   iconStyle: {
     paddingRight: 16,
+  },
+  synced: {
+    fontSize: 16,
+    color: '#888',
   },
 });

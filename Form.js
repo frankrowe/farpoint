@@ -45,8 +45,6 @@ class Form extends React.Component {
       this.setState({ submitting: false });
       if (success) {
         if (deselectFeature) {
-          // gj.unsynced = true;
-          // selectFeature(gj, true);
           deselectFeature();
         }
         if (makeAnnotations) {
@@ -65,11 +63,6 @@ class Form extends React.Component {
           if (insertSuccess) {
             deselectFeature();
           }
-          // if (!insertSuccess) {
-          //   selectFeature({ ...gj, id: submission.id }, true);
-          // } else {
-          //   selectFeature(gj, false);
-          // }
         }
         if (makeAnnotations) {
           makeAnnotations();
