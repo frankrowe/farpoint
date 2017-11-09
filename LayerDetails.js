@@ -84,6 +84,16 @@ export default class LayerDetails extends Component {
 
   static navigationOptions = ({ navigation }) => ({
     title: JSON.parse(navigation.state.params.layer.metadata).Title,
+    headerRight: navigation.state.params.layer.features.length ? (
+      <Icon
+        style={styles.headerRightBtnStyle}
+        name={Platform.OS === 'ios' ? 'ios-phone-portrait' : 'md-phone-portrait'}
+        size={25}
+        color={'white'}
+      />
+    ) : (
+      <Icon style={styles.headerRightBtnStyle} name={'ios-cloud'} size={25} color={'white'} />
+    ),
   });
 
   onAddData = e => {
@@ -776,5 +786,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
+  },
+  headerRightBtnStyle: {
+    paddingRight: 16,
   },
 });

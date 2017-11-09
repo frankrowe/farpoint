@@ -7,6 +7,7 @@
 import React, { Component } from 'react';
 import { AppRegistry, Button, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StackNavigator, SafeAreaView } from 'react-navigation';
+import { updateFocus } from 'react-navigation-is-focused-hoc';
 import FarPoint from './FarPoint';
 import LayerList from './LayerList';
 import LayerDetails from './LayerDetails';
@@ -50,7 +51,11 @@ export default class App extends React.Component {
       <View style={{ flex: 1, backgroundColor: 'white' }}>
         <SafeAreaView style={{ flex: 1 }} forceInset={{ top: 'never', bottom: 'always' }}>
           <StatusBar backgroundColor={green} barStyle="light-content" />
-          <AppStack onNavigationStateChange={null} />
+          <AppStack
+            onNavigationStateChange={(prevState, currentState) => {
+              updateFocus(currentState);
+            }}
+          />
         </SafeAreaView>
       </View>
     );

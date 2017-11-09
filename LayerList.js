@@ -10,15 +10,24 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import Swipeout from 'react-native-swipeout';
 import { NavigationActions } from 'react-navigation';
-import { format, distanceInWordsStrict } from 'date-fns';
+import { withNavigationFocus } from 'react-navigation-is-focused-hoc';
+import { format, distanceInWordsToNow, distanceInWordsStrict } from 'date-fns';
+import Color from 'color';
 import * as db from './db';
 import { blue, orange, gray, darkGray, red } from './styles';
+
+const iconColor = Color(orange)
+  .alpha(0.7)
+  .string();
 
 const FormCell = props => {
   const metadata = JSON.parse(props.layer.metadata);
   let subtext = `Submissions: ${props.layer.submissions.length}`;
   if (props.layer.features.length && props.layer.featuresUpdated) {
-    subtext += ` Last Updated: ${distanceInWordsStrict(props.layer.featuresUpdated, new Date())}`;
+    subtext += ` Last Updated: ${distanceInWordsStrict(
+      props.layer.featuresUpdated,
+      props.now
+    )} ago`;
   }
   return (
     <Swipeout
@@ -47,14 +56,14 @@ const FormCell = props => {
           {props.status === 'download' && (
             <View style={styles.cellRowIcons}>
               <TouchableOpacity style={styles.cellRowIcon} onPress={props.onDownload}>
-                <Icon name="md-download" size={30} color={'#aaa'} />
+                <Icon name="md-download" size={30} color={iconColor} />
               </TouchableOpacity>
             </View>
           )}
           {props.status === 'offline' && (
             <View style={styles.cellRowIcons}>
               <TouchableOpacity style={styles.cellRowIcon} onPress={props.onRefresh}>
-                <Icon name="md-refresh" size={30} color={'#aaa'} />
+                <Icon name="md-refresh" size={30} color={iconColor} />
               </TouchableOpacity>
             </View>
           )}
@@ -85,7 +94,7 @@ const FormCell = props => {
   );
 };
 
-export default class LayerList extends Component {
+class LayerList extends Component {
   static navigationOptions = ({ navigation }) => ({
     title: 'Layers',
     headerTitleStyle: { marginLeft: 'auto', marginRight: 'auto' },
@@ -113,7 +122,7 @@ export default class LayerList extends Component {
     ),
   });
 
-  state = { layerStatus: {} };
+  state = { layerStatus: {}, now: new Date() };
 
   keyExtractor = item => item.key;
 
@@ -137,6 +146,7 @@ export default class LayerList extends Component {
         if (success) {
           success = await db.downloadFeatures(layer);
           this.setState({
+            now: new Date(),
             layerStatus: {
               ...this.state.layerStatus,
               [layer.key]: success ? 'offline' : 'fail',
@@ -165,6 +175,7 @@ export default class LayerList extends Component {
       async () => {
         const success = await db.downloadFeatures(layer);
         this.setState({
+          now: new Date(),
           layerStatus: {
             ...this.state.layerStatus,
             [layer.key]: success ? 'offline' : 'fail',
@@ -201,11 +212,18 @@ export default class LayerList extends Component {
       layerStatus[layer.key] = layer.features.length ? 'offline' : 'download';
     });
     this.setState({
+      now: new Date(),
       layerStatus: {
         ...this.state.layerStatus,
         ...layerStatus,
       },
     });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (!this.props.isFocused && nextProps.isFocused) {
+      this.setState({ now: new Date() });
+    }
   }
 
   render() {
@@ -223,6 +241,7 @@ export default class LayerList extends Component {
             <FormCell
               layer={item}
               status={this.state.layerStatus[item.key]}
+              now={this.state.now}
               onSelect={() => {
                 navigate('LayerDetails', { layer: item, wfs });
               }}
@@ -238,6 +257,8 @@ export default class LayerList extends Component {
     );
   }
 }
+
+export default withNavigationFocus(LayerList);
 
 const styles = StyleSheet.create({
   container: {
