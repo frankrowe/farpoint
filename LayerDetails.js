@@ -16,8 +16,6 @@ import {
 import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MapSkin from './MapSkin';
-import turfInside from '@turf/inside';
-import bboxPolygon from '@turf/bbox-polygon';
 import { throttle, debounce } from 'lodash';
 import FeatureCount from './FeatureCount';
 import FeatureDetails from './FeatureDetails';
@@ -68,7 +66,6 @@ const layerStyles = MapboxGL.StyleSheet.create({
   },
 });
 
-let self;
 export default class LayerDetails extends Component {
   state = {
     renderPlaceholderOnly: true,
@@ -87,12 +84,17 @@ export default class LayerDetails extends Component {
 
   static navigationOptions = ({ navigation }) => ({
     title: JSON.parse(navigation.state.params.layer.metadata).Title,
+    headerRight: navigation.state.params.layer.features.length ? (
+      <Icon
+        style={styles.headerRightBtnStyle}
+        name={Platform.OS === 'ios' ? 'ios-phone-portrait' : 'md-phone-portrait'}
+        size={25}
+        color={'white'}
+      />
+    ) : (
+      <Icon style={styles.headerRightBtnStyle} name={'ios-cloud'} size={25} color={'white'} />
+    ),
   });
-
-  constructor(props) {
-    super(props);
-    self = this;
-  }
 
   onAddData = e => {
     const { navigate } = this.props.navigation;
@@ -125,6 +127,7 @@ export default class LayerDetails extends Component {
         operation,
         makeAnnotations: this.makeAnnotations,
         selectFeature: this.selectFeature,
+        deselectFeature: this.deselectFeature,
       });
     });
   };
@@ -240,6 +243,7 @@ export default class LayerDetails extends Component {
       operation,
       makeAnnotations: this.makeAnnotations,
       selectFeature: this.selectFeature,
+      deselectFeature: this.deselectFeature,
     });
   };
 
@@ -403,9 +407,25 @@ export default class LayerDetails extends Component {
     const metadata = JSON.parse(layer.metadata);
     this.setState({ loading: true });
     const newState = {};
-    const featureCollection = await wfs.getFeatures(this.props.navigation.state.params.wfs, layer);
-    if (featureCollection) {
-      newState.geojson = featureCollection;
+    if (layer.features.length) {
+      //console.time('parsefeatures');
+      const features = layer.features.map(f => JSON.parse(f.geojson));
+      //console.timeEnd('parsefeatures');
+      const featureCollection = {
+        ...emptyFeatureCollection,
+        features,
+      };
+      if (featureCollection) {
+        newState.geojson = featureCollection;
+      }
+    } else {
+      const featureCollection = await wfs.getFeatures(
+        this.props.navigation.state.params.wfs,
+        layer
+      );
+      if (featureCollection) {
+        newState.geojson = featureCollection;
+      }
     }
 
     const unSyncedFeatures = layer.submissions.filter(s => !s.insert_success).map(s => {
@@ -440,7 +460,7 @@ export default class LayerDetails extends Component {
           0
         );
       }
-    }, 500);
+    }, 1000);
   };
 
   deleteFeature = async () => {
@@ -764,5 +784,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
+  },
+  headerRightBtnStyle: {
+    paddingRight: 16,
   },
 });

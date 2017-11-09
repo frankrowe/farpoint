@@ -33,18 +33,19 @@ class Form extends React.Component {
       operation,
       makeAnnotations,
       selectFeature,
+      deselectFeature,
     } = this.props.navigation.state.params;
     const gj = {
       ...feature,
+      type: 'Feature',
       properties: formData,
     };
     if (feature.unsynced) {
       const success = db.updateSubmission(gj);
       this.setState({ submitting: false });
       if (success) {
-        if (selectFeature) {
-          gj.unsynced = true;
-          selectFeature(gj, true);
+        if (deselectFeature) {
+          deselectFeature();
         }
         if (makeAnnotations) {
           makeAnnotations();
@@ -58,11 +59,9 @@ class Form extends React.Component {
       if (submission) {
         const insertSuccess = await db.insert(submission);
         this.setState({ submitting: false });
-        if (selectFeature) {
-          if (!insertSuccess) {
-            selectFeature({ ...gj, id: submission.id }, true);
-          } else {
-            selectFeature(gj, false);
+        if (deselectFeature) {
+          if (insertSuccess) {
+            deselectFeature();
           }
         }
         if (makeAnnotations) {
@@ -118,7 +117,7 @@ class Form extends React.Component {
           feature.geometry && (
             <View style={styles.location}>
               <Text>
-                Location: {coord[1]}, {coord[0]}
+                Location: {coord[1].toFixed(4)}, {coord[0].toFixed(4)}
               </Text>
             </View>
           )}

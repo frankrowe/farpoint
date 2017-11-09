@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Text, View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
+import { distanceInWords } from 'date-fns';
 import Loading from './Loading';
 import * as db from './db';
 import { blue, orange, gray, darkGray } from './styles';
@@ -14,7 +15,7 @@ export default class WFSSettings extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { syncing: false, refreshing: false };
+    this.state = { syncing: false, refreshing: false, allSubmissionCount: 0, submissonCount: 0 };
   }
 
   syncSubmissions = async wfs => {
@@ -51,12 +52,14 @@ export default class WFSSettings extends Component {
   updateSubmissionCount = () => {
     const { wfs } = this.props.navigation.state.params;
     let submissonCount = 0;
+    let allSubmissionCount = 0;
     if (wfs.layers) {
       wfs.layers.forEach(layer => {
+        allSubmissionCount += layer.submissions.length;
         submissonCount += layer.submissions.filtered('insert_success == false').length;
       });
     }
-    this.setState({ submissonCount });
+    this.setState({ submissonCount, allSubmissionCount });
   };
 
   componentWillMount() {
@@ -88,17 +91,21 @@ export default class WFSSettings extends Component {
                 style={{ backgroundColor: 'red' }}
               />
             </View>
-            <Text style={styles.note}>Delete this Server.</Text>
+            <Text style={styles.note}>Delete this Exchange from your device.</Text>
           </View>
           <View style={styles.row}>
             <View style={styles.button}>
               <Button
                 color={orange}
-                title={`Sync (${this.state.submissonCount})`}
+                title={`View Changes`}
                 onPress={() => this.syncSubmissions(wfs)}
               />
             </View>
-            <Text style={styles.note}>Upload all unsynced submissions.</Text>
+            <Text style={styles.note}>
+              View and sync all changes you have made on this device to Exchange.{'\n'}
+              {'\n'}
+              {this.state.allSubmissionCount} changes. {this.state.submissonCount} unsynced.
+            </Text>
           </View>
           <View style={styles.row}>
             <View style={styles.button}>
@@ -109,7 +116,10 @@ export default class WFSSettings extends Component {
                 style={styles.button}
               />
             </View>
-            <Text style={styles.note}>Refresh Layers and Metadata for this Server.</Text>
+            <Text style={styles.note}>
+              Download new layers and metadata from this Exchange to your device. {'\n'}
+              {'\n'}Last updated: {distanceInWords(wfs.created, new Date())} ago
+            </Text>
           </View>
         </View>
         {this.state.refreshing && <Loading loading={this.state.refreshing} />}
@@ -128,5 +138,5 @@ const styles = StyleSheet.create({
     borderBottomColor: darkGray,
     borderBottomWidth: 1,
   },
-  note: { paddingLeft: 8, paddingBottom: 8, fontSize: 11, color: '#999' },
+  note: { paddingLeft: 8, paddingRight: 8, paddingBottom: 8, fontSize: 11, color: '#999' },
 });

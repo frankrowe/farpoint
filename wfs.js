@@ -233,7 +233,7 @@ const createInsertPayload = (layer, point) => {
         </${metadata.feature_type}>
       </wfs:Insert>
     </wfs:Transaction>`;
-  console.log(xml);
+  //console.log(xml);
   return xml;
 };
 
@@ -297,7 +297,7 @@ const createUpdatePayload = (layer, point) => {
  </ogc:Filter>
         </wfs:Update>
       </wfs:Transaction>`;
-  console.log(xml);
+  //console.log(xml);
   return xml;
 };
 
@@ -364,7 +364,14 @@ export const postTransaction = async (wfs, layer, point, operation = 'insert') =
             ? summary[0]['wfs:totalInserted'][0]
             : false;
           if (totalInserted === '1') {
-            success = true;
+            const insertResults = transactionResponse['wfs:InsertResults'];
+            const insertedFeature = insertResults[0]['wfs:Feature'][0];
+            const insertedFeatureId = insertedFeature['ogc:FeatureId'][0]['$']['fid'];
+            if (insertedFeatureId) {
+              success = insertedFeatureId;
+            } else {
+              success = false;
+            }
           }
         } else if (operation === 'update') {
           const totalUpdated = summary[0]['wfs:totalUpdated']

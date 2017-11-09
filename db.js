@@ -1,9 +1,14 @@
 import Realm from 'realm';
 import { AppState, NetInfo } from 'react-native';
+import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import uuid from 'react-native-uuid';
+import turfArea from '@turf/area';
+import bboxPolygon from '@turf/bbox-polygon';
 import { find } from 'lodash';
 import * as wfs from './wfs';
 import * as exchange from './exchange';
+
+//MapboxGL.offlineManager.setTileCountLimit(1000);
 
 const WFSSchema = {
   name: 'WFS',
@@ -26,7 +31,9 @@ const LayerSchema = {
     id: 'string',
     key: 'string',
     metadata: 'string',
+    offlineKey: 'string',
     features: { type: 'list', objectType: 'Feature' },
+    featuresUpdated: { type: 'date', optional: true },
     submissions: { type: 'list', objectType: 'Submission' },
     wfs: { type: 'linkingObjects', objectType: 'WFS', property: 'layers' },
   },
@@ -52,19 +59,36 @@ const FeatureSchema = {
   properties: {
     id: 'string',
     geojson: 'string',
+    layer: { type: 'linkingObjects', objectType: 'Layer', property: 'features' },
   },
 };
 
 //single exported Realm instance
 export const realm = new Realm({
   schema: [WFSSchema, LayerSchema, SubmissionSchema, FeatureSchema],
-  schemaVersion: 1,
+  schemaVersion: 5,
   migration: (oldRealm, newRealm) => {
     if (oldRealm.schemaVersion < 1) {
       const oldObjects = oldRealm.objects('Submission');
       const newObjects = newRealm.objects('Submission');
       for (let i = 0; i < oldObjects.length; i++) {
         newObjects[i].created = new Date();
+      }
+    }
+    if (oldRealm.schemaVersion < 3) {
+      const oldObjects = oldRealm.objects('Layer');
+      const newObjects = newRealm.objects('Layer');
+      for (let i = 0; i < oldObjects.length; i++) {
+        newObjects[i].offlineKey = '';
+      }
+    }
+    if (oldRealm.schemaVersion < 4) {
+      const oldObjects = oldRealm.objects('Layer');
+      const newObjects = newRealm.objects('Layer');
+      for (let i = 0; i < oldObjects.length; i++) {
+        if (oldObjects[i].features.length) {
+          newObjects[i].featuresUpdated = new Date();
+        }
       }
     }
   },
@@ -76,7 +100,7 @@ let currentState = AppState.currentState;
 let isConnected = false;
 NetInfo.getConnectionInfo().then(async connectionInfo => {
   console.log(
-    'Initial, type: ' + connectionInfo.type + ', effectiveType: ' + connectionInfo.effectiveType
+    'Initial,  type: ' + connectionInfo.type + ', effectiveType: ' + connectionInfo.effectiveType
   );
 });
 export const monitor = () => {
@@ -88,6 +112,7 @@ export const monitor = () => {
 export const newLayer = layer => ({
   id: uuid.v1(),
   key: layer.layer_key,
+  offlineKey: '',
   metadata: JSON.stringify(layer),
   submissions: [],
   features: [],
@@ -139,6 +164,7 @@ export const refreshWFS = async wfs => {
     const token = JSON.parse(wfs.token);
     const layers = await exchange.getLayers(wfs.url, token);
     realm.write(() => {
+      wfs.created = new Date();
       layers.forEach(layer => {
         const existingLayer = find(wfs.layers, { key: layer.layer_key });
         if (existingLayer) {
@@ -181,6 +207,98 @@ export const saveWFS = async (wfsUrl, user, password) => {
   }
 };
 
+const getZoomsToCache = bbox => {
+  let min = 0,
+    max = 0;
+  const polygon = bboxPolygon([+bbox[0], +bbox[1], +bbox[2], +bbox[3]]);
+  const area = turfArea(polygon);
+  if (area < 1250000) {
+    min = 14;
+    max = 16;
+  } else if (area < 125000000) {
+    min = 12;
+    max = 14;
+  } else if (area < 50000000000) {
+    min = 8;
+    max = 12;
+  } else {
+    min = 0;
+    max = 8;
+  }
+  //console.log(area, min, max);
+  return { min, max };
+};
+
+export const downloadBasemap = (layer, next) => {
+  const metadata = JSON.parse(layer.metadata);
+  const bbox = [[+metadata.bbox[0], +metadata.bbox[1]], [+metadata.bbox[2], +metadata.bbox[3]]];
+  const { min, max } = getZoomsToCache(metadata.bbox);
+  const offlineKey = uuid.v1();
+  realm.write(() => {
+    layer.offlineKey = offlineKey;
+  });
+  return new Promise((resolve, reject) => {
+    const progressListener = (offlineRegion, status) => {
+      next(status);
+      if (status.state === 2 || status.state === 3) {
+        resolve(true);
+      }
+    };
+    const errorListener = (offlineRegion, err) => {
+      console.log(offlineRegion, err);
+      reject(err);
+    };
+
+    MapboxGL.offlineManager.createPack(
+      {
+        name: offlineKey,
+        styleURL: MapboxGL.StyleURL.Street,
+        minZoom: min,
+        maxZoom: max,
+        bounds: bbox,
+      },
+      progressListener,
+      errorListener
+    );
+  });
+};
+
+export const deleteBasemap = async layer => {
+  await MapboxGL.offlineManager.deletePack(layer.offlineKey);
+  MapboxGL.offlineManager.unsubscribe(layer.offlineKey);
+  return true;
+};
+
+export const downloadFeatures = async layer => {
+  try {
+    const featureCollection = await wfs.getFeatures(layer.wfs[0], layer);
+    const features = featureCollection.features.map(f => ({
+      id: f.id,
+      geojson: JSON.stringify(f),
+    }));
+    realm.write(() => {
+      layer.features = features;
+      layer.featuresUpdated = new Date();
+    });
+    return true;
+  } catch (error) {
+    console.log('download error', error);
+    return false;
+  }
+};
+
+export const deleteFeatures = async layer => {
+  try {
+    realm.write(() => {
+      layer.features = [];
+    });
+    const success = await deleteBasemap(layer);
+    return success;
+  } catch (error) {
+    return false;
+  }
+};
+
 export const deleteObject = realmObject => {
   try {
     if (realm.isInTransaction) {
@@ -210,7 +328,7 @@ export const insert = async submission => {
   const _wfs = layer.wfs[0];
   const success = await wfs.postTransaction(_wfs, layer, point, operation);
   if (success) {
-    insertSuccessful(submission);
+    insertSuccessful(submission, success);
     return true;
   } else {
     insertFailure(submission);
@@ -278,8 +396,47 @@ export const deleteSubmission = point => {
 
 export const deleteFeature = async (layer, point) => {
   const _wfs = layer.wfs[0];
-  const success = await wfs.postTransaction(_wfs, layer, point, 'delete');
+  let success = await wfs.postTransaction(_wfs, layer, point, 'delete');
+  if (success && layer.features.length) {
+    success = deleteFeatureCache(layer, point);
+  }
   return success;
+};
+
+export const deleteFeatureCache = (layer, point) => {
+  realm.write(() => {
+    layer.features = layer.features.filter(f => f.id !== point.id);
+  });
+  return true;
+};
+
+export const updateFeatureCache = (submission, featureId) => {
+  const layer = submission.layer[0];
+  const wfs = layer.wfs[0];
+  const feature = JSON.parse(submission.point);
+  realm.write(() => {
+    if (submission.operation === 'insert') {
+      const newFeature = {
+        id: featureId,
+        ...feature,
+      };
+      layer.features.push({
+        id: featureId,
+        geojson: JSON.stringify(newFeature),
+      });
+    } else if (submission.operation === 'update') {
+      layer.features = layer.features.map(f => {
+        if (f.id === feature.id) {
+          return {
+            ...f,
+            geojson: JSON.stringify(feature),
+          };
+        }
+        return f;
+      });
+    }
+  });
+  return true;
 };
 
 // Private methods
@@ -292,8 +449,9 @@ const insertAll = () => {
   });
 };
 
-const insertSuccessful = submission => {
+const insertSuccessful = (submission, featureId) => {
   console.log('insertSuccessful');
+  updateFeatureCache(submission, featureId);
   if (realm.isInTransaction) {
     submission.insert_success = true;
     submission.insert_attempts = submission.insert_attempts + 1;

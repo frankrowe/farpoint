@@ -137,7 +137,10 @@ class FeatureDetails extends React.Component {
       key: 'location',
       label: 'Location',
       onEditLocation,
-      value: selectedFeature.geometry.coordinates.join(', '),
+      value: selectedFeature.geometry.coordinates
+        .reverse()
+        .map(c => c.toFixed(4))
+        .join(', '),
     });
     if (this.state.image) {
       return <FullScreenImage uri={this.state.image} onImageTap={this.onImageTap} />;
