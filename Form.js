@@ -40,6 +40,7 @@ class Form extends React.Component {
       type: 'Feature',
       properties: formData,
     };
+    console.log(gj);
     if (feature.unsynced) {
       const success = db.updateSubmission(gj);
       this.setState({ submitting: false });
@@ -105,11 +106,11 @@ class Form extends React.Component {
     const { layer, feature } = this.props.navigation.state.params;
     const { SCForm } = scformschema;
     const { submitting } = this.state;
-    let coord;
+    let coordinates;
     if (feature.geometry.type === 'Point') {
-      coord = feature.geometry.coordinates;
+      coordinates = feature.geometry.coordinates;
     } else if (feature.geometry.type === 'MultiPoint') {
-      coord = feature.geometry.coordinates[0];
+      coordinates = feature.geometry.coordinates[0];
     }
     return (
       <View style={styles.container}>
@@ -117,7 +118,11 @@ class Form extends React.Component {
           feature.geometry && (
             <View style={styles.location}>
               <Text>
-                Location: {coord[1].toFixed(4)}, {coord[0].toFixed(4)}
+                Location:{' '}
+                {coordinates
+                  .map(c => c.toFixed(4))
+                  .reverse()
+                  .join(', ')}
               </Text>
             </View>
           )}

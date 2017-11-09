@@ -138,8 +138,8 @@ class FeatureDetails extends React.Component {
       label: 'Location',
       onEditLocation,
       value: selectedFeature.geometry.coordinates
-        .reverse()
         .map(c => c.toFixed(4))
+        .reverse()
         .join(', '),
     });
     if (this.state.image) {
