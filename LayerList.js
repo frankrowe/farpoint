@@ -133,10 +133,11 @@ class LayerList extends Component {
       },
       async () => {
         let success = await db.downloadBasemap(layer, status => {
+          const percentage = Math.round(status.percentage);
           this.setState({
             layerStatus: {
               ...this.state.layerStatus,
-              [layer.key]: status.percentage === 100 ? '99%' : `${status.percentage}%`,
+              [layer.key]: percentage === 100 ? '99%' : `${percentage}%`,
             },
           });
         });
