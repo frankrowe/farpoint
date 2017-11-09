@@ -117,7 +117,7 @@ class Form extends React.Component {
           feature.geometry && (
             <View style={styles.location}>
               <Text>
-                Location: {coord[1]}, {coord[0]}
+                Location: {coord[1].toFixed(4)}, {coord[0].toFixed(4)}
               </Text>
             </View>
           )}
