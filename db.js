@@ -206,18 +206,32 @@ export const saveWFS = async (wfsUrl, user, password) => {
   }
 };
 
+const getZoomsToCache = bbox => {
+  let min = 0,
+    max = 0;
+  const polygon = bboxPolygon([+bbox[0], +bbox[1], +bbox[2], +bbox[3]]);
+  const area = turfArea(polygon);
+  if (area < 1250000) {
+    min = 14;
+    max = 16;
+  } else if (area < 125000000) {
+    min = 12;
+    max = 14;
+  } else if (area < 50000000000) {
+    min = 8;
+    max = 12;
+  } else {
+    min = 0;
+    max = 8;
+  }
+  //console.log(area, min, max);
+  return { min, max };
+};
+
 export const downloadBasemap = (layer, next) => {
   const metadata = JSON.parse(layer.metadata);
   const bbox = [[+metadata.bbox[0], +metadata.bbox[1]], [+metadata.bbox[2], +metadata.bbox[3]]];
-  const polygon = bboxPolygon([
-    +metadata.bbox[0],
-    +metadata.bbox[1],
-    +metadata.bbox[2],
-    +metadata.bbox[3],
-  ]);
-  console.log(JSON.stringify(polygon));
-  const area = turfArea(polygon);
-  console.log(area);
+  const { min, max } = getZoomsToCache(metadata.bbox);
   const offlineKey = uuid.v1();
   realm.write(() => {
     layer.offlineKey = offlineKey;
@@ -237,9 +251,9 @@ export const downloadBasemap = (layer, next) => {
     MapboxGL.offlineManager.createPack(
       {
         name: offlineKey,
-        styleURL: 'https://chopper.boundlessgeo.io/style/osm-liberty/osm-liberty.json',
-        minZoom: 8,
-        maxZoom: 12,
+        styleURL: MapboxGL.StyleURL.Street,
+        minZoom: min,
+        maxZoom: max,
         bounds: bbox,
       },
       progressListener,
