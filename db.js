@@ -473,7 +473,10 @@ const insertAll = () => {
 
 const insertSuccessful = (submission, featureId) => {
   console.log('insertSuccessful');
-  updateFeatureCache(submission, featureId);
+  const layer = submission.layer[0];
+  if (layer.features.length) {
+    updateFeatureCache(submission, featureId);
+  }
   if (realm.isInTransaction) {
     submission.insert_success = true;
     submission.insert_attempts = submission.insert_attempts + 1;
