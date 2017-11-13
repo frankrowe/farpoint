@@ -403,9 +403,13 @@ export default class LayerDetails extends Component {
 
   onPressSatellite = () => {
     this.setState({ renderPoints: false }, () => {
-      this.setState({ useSatellite: !this.state.useSatellite }, () => {
-        this.setState({ renderPoints: true });
-      });
+      setTimeout(() => {
+        this.setState({ useSatellite: !this.state.useSatellite }, () => {
+          setTimeout(() => {
+            this.setState({ renderPoints: true });
+          }, 500);
+        });
+      }, 500);
     });
   };
 
