@@ -4,6 +4,7 @@ import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import uuid from 'react-native-uuid';
 import turfArea from '@turf/area';
 import bboxPolygon from '@turf/bbox-polygon';
+import tileCover from 'tile-cover';
 import { find } from 'lodash';
 import * as wfs from './wfs';
 import * as exchange from './exchange';
@@ -32,11 +33,18 @@ const LayerSchema = {
     id: 'string',
     key: 'string',
     metadata: 'string',
-    offlineKey: 'string',
+    offlinePacks: { type: 'list', objectType: 'OfflinePack' },
     features: { type: 'list', objectType: 'Feature' },
     featuresUpdated: { type: 'date', optional: true },
     submissions: { type: 'list', objectType: 'Submission' },
     wfs: { type: 'linkingObjects', objectType: 'WFS', property: 'layers' },
+  },
+};
+
+const OfflinePackSchema = {
+  name: 'OfflinePack',
+  properties: {
+    key: 'string',
   },
 };
 
@@ -66,21 +74,14 @@ const FeatureSchema = {
 
 //single exported Realm instance
 export const realm = new Realm({
-  schema: [WFSSchema, LayerSchema, SubmissionSchema, FeatureSchema],
-  schemaVersion: 6,
+  schema: [WFSSchema, LayerSchema, SubmissionSchema, FeatureSchema, OfflinePackSchema],
+  schemaVersion: 8,
   migration: (oldRealm, newRealm) => {
     if (oldRealm.schemaVersion < 1) {
       const oldObjects = oldRealm.objects('Submission');
       const newObjects = newRealm.objects('Submission');
       for (let i = 0; i < oldObjects.length; i++) {
         newObjects[i].created = new Date();
-      }
-    }
-    if (oldRealm.schemaVersion < 3) {
-      const oldObjects = oldRealm.objects('Layer');
-      const newObjects = newRealm.objects('Layer');
-      for (let i = 0; i < oldObjects.length; i++) {
-        newObjects[i].offlineKey = '';
       }
     }
     if (oldRealm.schemaVersion < 4) {
@@ -97,6 +98,16 @@ export const realm = new Realm({
       const newObjects = newRealm.objects('WFS');
       for (let i = 0; i < oldObjects.length; i++) {
         newObjects[i].updated = oldObjects[i].created;
+      }
+    }
+    if (oldRealm.schemaVersion < 8) {
+      const oldObjects = oldRealm.objects('Layer');
+      const newObjects = newRealm.objects('Layer');
+      for (let i = 0; i < oldObjects.length; i++) {
+        newObjects.offlinePacks = [];
+        if (oldObjects[i].offlineKey) {
+          newObjects.offlinePacks.push({ key: oldObjects[i].offlineKey });
+        }
       }
     }
   },
@@ -120,7 +131,7 @@ export const monitor = () => {
 export const newLayer = layer => ({
   id: uuid.v1(),
   key: layer.layer_key,
-  offlineKey: '',
+  offlinePacks: [],
   metadata: JSON.stringify(layer),
   submissions: [],
   features: [],
@@ -217,40 +228,40 @@ export const saveWFS = async (wfsUrl, user, password) => {
 };
 
 const getZoomsToCache = bbox => {
-  let min = 0,
-    max = 0;
+  let minZoom = 0,
+    maxZoom = 0;
   const polygon = bboxPolygon([+bbox[0], +bbox[1], +bbox[2], +bbox[3]]);
   const area = turfArea(polygon);
   if (area < 1250000) {
-    min = 14;
-    max = 16;
+    minZoom = 14;
+    maxZoom = 16;
   } else if (area < 125000000) {
-    min = 12;
-    max = 14;
+    minZoom = 12;
+    maxZoom = 14;
   } else if (area < 50000000000) {
-    min = 8;
-    max = 12;
+    minZoom = 8;
+    maxZoom = 12;
   } else {
-    min = 0;
-    max = 8;
+    minZoom = 0;
+    maxZoom = 8;
   }
-  //console.log(area, min, max);
-  return { min, max };
+  //console.log(area, minZoom, maxZoom);
+  return { minZoom, maxZoom };
 };
 
-export const downloadBasemap = (layer, next) => {
-  const metadata = JSON.parse(layer.metadata);
-  const bbox = [[+metadata.bbox[0], +metadata.bbox[1]], [+metadata.bbox[2], +metadata.bbox[3]]];
-  const { min, max } = getZoomsToCache(metadata.bbox);
+export const downloadBasemap = (layer, bbox, styleURL, next) => {
+  const bounds = [[+bbox[0], +bbox[1]], [+bbox[2], +bbox[3]]];
+  const { minZoom, maxZoom } = getZoomsToCache(bbox);
   const offlineKey = uuid.v1();
   realm.write(() => {
-    layer.offlineKey = offlineKey;
+    layer.offlinePacks.push({ key: offlineKey });
   });
   return new Promise((resolve, reject) => {
     const progressListener = (offlineRegion, status) => {
-      next(status);
       if (status.percentage === 100 || status.state === 3) {
         resolve(true);
+      } else {
+        next(status);
       }
     };
     const errorListener = (offlineRegion, err) => {
@@ -261,10 +272,10 @@ export const downloadBasemap = (layer, next) => {
     MapboxGL.offlineManager.createPack(
       {
         name: offlineKey,
-        styleURL: MapboxGL.StyleURL.Street,
-        minZoom: min,
-        maxZoom: max,
-        bounds: bbox,
+        styleURL,
+        minZoom,
+        maxZoom,
+        bounds,
       },
       progressListener,
       errorListener
@@ -272,9 +283,11 @@ export const downloadBasemap = (layer, next) => {
   });
 };
 
-export const deleteBasemap = async layer => {
-  await MapboxGL.offlineManager.deletePack(layer.offlineKey);
-  MapboxGL.offlineManager.unsubscribe(layer.offlineKey);
+export const deleteBasemap = layer => {
+  layer.offlinePacks.forEach(async offlinePack => {
+    await MapboxGL.offlineManager.deletePack(offlinePack.key);
+    MapboxGL.offlineManager.unsubscribe(offlinePack.key);
+  });
   return true;
 };
 
@@ -514,4 +527,13 @@ const insertListener = () => {
       //insert(submission);
     });
   });
+};
+
+export const tileCount = (bbox, minZoom, maxZoom) => {
+  const polygon = bboxPolygon(bbox);
+  var sum = 0;
+  for (var i = minZoom; i <= Math.min(16, maxZoom); i++) {
+    sum += tileCover.tiles(polygon.geometry, { min_zoom: i, max_zoom: i }).length;
+  }
+  return sum;
 };

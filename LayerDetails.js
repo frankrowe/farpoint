@@ -22,7 +22,7 @@ import FeatureDetails from './FeatureDetails';
 import FAnnotation, { FAnnotationView } from './FAnnotation';
 import Loading from './Loading';
 import CreateMenu from './CreateMenu';
-import { blue, orange, lightOrange, green, gray, darkGray } from './styles';
+import { blue, orange, lightOrange, green, gray, darkGray, red } from './styles';
 import * as wfs from './wfs';
 import * as db from './db';
 
@@ -72,6 +72,7 @@ export default class LayerDetails extends Component {
     loading: false,
     adding: false,
     centerCoordinate: [0, 0],
+    zoomLevel: 0,
     annotations: [],
     geojson: null,
     unSyncedFeatureCollection: null,
@@ -80,6 +81,8 @@ export default class LayerDetails extends Component {
     trackingLocation: false,
     working: false,
     useSatellite: false,
+    downloadStatus: false,
+    renderPoints: true,
   };
 
   static navigationOptions = ({ navigation }) => ({
@@ -137,7 +140,7 @@ export default class LayerDetails extends Component {
   };
 
   onRegionDidChange = e => {
-    this.setState({ centerCoordinate: e.geometry.coordinates });
+    this.setState({ centerCoordinate: e.geometry.coordinates, zoomLevel: e.properties.zoomLevel });
   };
 
   onEditClose = () => {
@@ -399,7 +402,63 @@ export default class LayerDetails extends Component {
   };
 
   onPressSatellite = () => {
-    this.setState({ useSatellite: !this.state.useSatellite });
+    this.setState({ renderPoints: false }, () => {
+      this.setState({ useSatellite: !this.state.useSatellite }, () => {
+        this.setState({ renderPoints: true });
+      });
+    });
+  };
+
+  downloadBbox = async () => {
+    const { layer } = this.props.navigation.state.params;
+    const bounds = await this._map.getVisibleBounds();
+    const bbox = [bounds[0][0], bounds[0][1], bounds[1][0], bounds[1][1]];
+    this.setState({
+      downloadStatus: 'loading',
+    });
+    try {
+      let success = await db.downloadBasemap(
+        layer,
+        bbox,
+        this.state.useSatellite ? MapboxGL.StyleURL.SatelliteStreet : MapboxGL.StyleURL.Street,
+        status => {
+          const percentage = Math.round(status.percentage);
+          this.setState({
+            downloadStatus: `${percentage}%`,
+          });
+        }
+      );
+      this.setState({
+        downloadStatus: success ? 'success' : 'fail',
+      });
+    } catch (error) {
+      this.setState({
+        downloadStatus: 'fail',
+      });
+    }
+  };
+
+  onPressCacheBbox = async () => {
+    const bounds = await this._map.getVisibleBounds();
+    const bbox = [bounds[0][0], bounds[0][1], bounds[1][0], bounds[1][1]];
+    const tileCount = db.tileCount(bbox, this.state.zoomLevel, 15);
+    if (tileCount > 500) {
+      requestAnimationFrame(() => {
+        Alert.alert(
+          'Region Too Large',
+          'Zoom in further to enable downloading this map for offline use.',
+          [{ text: 'OK' }]
+        );
+      });
+    } else {
+      requestAnimationFrame(() => {
+        Alert.alert(
+          'Download Region',
+          'Download this map region to make it available for offline use.',
+          [{ text: 'Download', onPress: this.downloadBbox }, { text: 'Cancel' }]
+        );
+      });
+    }
   };
 
   makeAnnotations = async () => {
@@ -521,13 +580,11 @@ export default class LayerDetails extends Component {
       <MapboxGL.ShapeSource id="pointSource" shape={shape}>
         <MapboxGL.CircleLayer
           id="pointLayer"
-          sourceLayerID="pointLayer"
           filter={['!has', 'selected']}
           style={layerStyles.points}
         />
         <MapboxGL.CircleLayer
           id="selectedFeatureFill"
-          sourceLayerID="selectedFeatureLayer"
           filter={['has', 'selected']}
           style={layerStyles.selectedFeature}
           aboveLayerID="pointLayer"
@@ -557,18 +614,50 @@ export default class LayerDetails extends Component {
       <MapboxGL.ShapeSource id="pointsUnsyncedSource" shape={shape}>
         <MapboxGL.CircleLayer
           id="pointsUnsynced"
-          sourceLayerID="pointsUnsyncedLayer"
           filter={['!has', 'selected']}
           style={layerStyles.pointsUnsynced}
         />
         <MapboxGL.CircleLayer
           id="pointsUnsyncedSelected"
-          sourceLayerID="pointsUnsyncedSelectedLayer"
           filter={['has', 'selected']}
           style={layerStyles.pointsUnsyncedSelected}
         />
       </MapboxGL.ShapeSource>
     );
+  }
+
+  renderDownloadBtn() {
+    if (this.state.downloadStatus === false) {
+      return (
+        <TouchableOpacity
+          style={[styles.locationButton, { backgroundColor: 'white' }]}
+          onPress={this.onPressCacheBbox}
+        >
+          <Icon name="md-download" size={20} color={'#4F8EF7'} />
+        </TouchableOpacity>
+      );
+    }
+    if (this.state.downloadStatus === 'success') {
+      return (
+        <View style={[styles.locationButton, { backgroundColor: 'white' }]}>
+          <Icon name="md-checkmark" size={20} color={green} />
+        </View>
+      );
+    }
+    if (this.state.downloadStatus === 'fail') {
+      return (
+        <View style={[styles.locationButton, { backgroundColor: 'white' }]}>
+          <Icon name="md-download" size={20} color={red} />
+        </View>
+      );
+    }
+    if (this.state.downloadStatus && this.state.downloadStatus.indexOf('%') >= 0) {
+      return (
+        <View style={[styles.locationButton, { backgroundColor: 'white' }]}>
+          <Text style={styles.downloadStatus}>{this.state.downloadStatus}</Text>
+        </View>
+      );
+    }
   }
 
   render() {
@@ -582,6 +671,7 @@ export default class LayerDetails extends Component {
       <View style={styles.container}>
         <View style={styles.overlay} pointerEvents="box-none">
           <View style={styles.toolbar} pointerEvents="box-none">
+            {layer.features.length > 0 && this.renderDownloadBtn()}
             <TouchableOpacity
               style={[
                 styles.locationButton,
@@ -673,8 +763,8 @@ export default class LayerDetails extends Component {
           rotateEnabled={false}
           pitchEnabled={false}
         >
-          {this.renderPoints()}
-          {this.renderPointsUnsynced()}
+          {this.state.renderPoints && this.renderPoints()}
+          {this.state.renderPoints && this.renderPointsUnsynced()}
         </MapboxGL.MapView>
         {!!this.state.selectedFeature &&
           !this.state.editing && (
@@ -787,5 +877,10 @@ const styles = StyleSheet.create({
   },
   headerRightBtnStyle: {
     paddingRight: 16,
+  },
+  downloadStatus: {
+    fontSize: 12,
+    fontFamily: Platform.OS === 'ios' ? 'HelveticaNeue-Medium' : 'monospace',
+    color: '#888',
   },
 });

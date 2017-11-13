@@ -7,7 +7,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@mapbox/react-native-mapbox-gl": "6.0.0-beta2",
+    "@mapbox/react-native-mapbox-gl": "6.0.0",
     "@turf/turf": "4.7.3",
     "base-64": "0.1.0",
     "buffer": "^5.0.7",
@@ -27,6 +27,7 @@
     "stream": "0.0.2",
     "tcomb-form-native": "0.6.10",
     "tcomb-json-schema": "0.3.1",
+    "tile-cover": "3.0.1",
     "timers": "^0.1.1",
     "uuid": "^3.1.0",
     "xml2js": "0.4.19"
@@ -40,6 +41,8 @@
   },
   "jest": {
     "preset": "react-native",
-    "setupFiles": ["./setupTests.js"]
+    "setupFiles": [
+      "./setupTests.js"
+    ]
   }
 }

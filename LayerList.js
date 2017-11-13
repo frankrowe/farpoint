@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   StyleSheet,
+  Platform,
   Text,
   TouchableOpacity,
   View,
@@ -11,6 +12,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Swipeout from 'react-native-swipeout';
 import { NavigationActions } from 'react-navigation';
 import { withNavigationFocus } from 'react-navigation-is-focused-hoc';
+import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import { distanceInWords } from 'date-fns';
 import Color from 'color';
 import * as db from './db';
@@ -132,25 +134,33 @@ class LayerList extends Component {
         },
       },
       async () => {
-        let success = await db.downloadBasemap(layer, status => {
-          const percentage = Math.round(status.percentage);
-          this.setState({
-            layerStatus: {
-              ...this.state.layerStatus,
-              [layer.key]: percentage === 100 ? '99%' : `${percentage}%`,
-            },
-          });
-        });
-        if (success) {
-          success = await db.downloadFeatures(layer);
-          this.setState({
-            now: new Date(),
-            layerStatus: {
-              ...this.state.layerStatus,
-              [layer.key]: success ? 'offline' : 'fail',
-            },
-          });
-        } else {
+        const metadata = JSON.parse(layer.metadata);
+        try {
+          let success = await db.downloadBasemap(
+            layer,
+            metadata.bbox,
+            MapboxGL.StyleURL.Street,
+            status => {
+              const percentage = Math.round(status.percentage);
+              this.setState({
+                layerStatus: {
+                  ...this.state.layerStatus,
+                  [layer.key]: percentage === 100 ? '99%' : `${percentage}%`,
+                },
+              });
+            }
+          );
+          if (success) {
+            success = await db.downloadFeatures(layer);
+            this.setState({
+              now: new Date(),
+              layerStatus: {
+                ...this.state.layerStatus,
+                [layer.key]: success ? 'offline' : 'fail',
+              },
+            });
+          }
+        } catch (error) {
           this.setState({
             layerStatus: {
               ...this.state.layerStatus,
@@ -316,6 +326,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'HelveticaNeue-Medium' : 'monospace',
   },
   cellContent: {
     flex: 1,
