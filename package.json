@@ -1,6 +1,6 @@
 {
   "name": "FarPoint",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "private": true,
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -41,8 +41,6 @@
   },
   "jest": {
     "preset": "react-native",
-    "setupFiles": [
-      "./setupTests.js"
-    ]
+    "setupFiles": ["./setupTests.js"]
   }
 }
