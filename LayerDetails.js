@@ -465,7 +465,37 @@ export default class LayerDetails extends Component {
     }
   };
 
-  makeAnnotations = async () => {
+  deleteFeature = async () => {
+    const feature = this.state.selectedFeature;
+    let success;
+    let msg;
+    this.setState({ working: true });
+    if (feature.unsynced) {
+      success = db.deleteSubmission(feature);
+      msg = 'This submission has been deleted';
+    } else {
+      const layer = this.props.navigation.state.params.layer;
+      success = await db.deleteFeature(layer, feature);
+      msg = 'This record has been deleted';
+    }
+    this.setState({ working: false }, () => {
+      setTimeout(() => {
+        if (success) {
+          requestAnimationFrame(() => {
+            Alert.alert('Success', msg, [{ text: 'OK', onPress: this.makeAnnotations }]);
+          });
+        } else {
+          requestAnimationFrame(() => {
+            Alert.alert('Error', 'Unable to delete. Please try again later.', [{ text: 'OK' }]);
+          });
+        }
+      }, 200);
+    });
+
+    this.setState({ selectedFeature: null });
+  };
+
+  makeAnnotations = async (next = () => {}) => {
     const { layer } = this.props.navigation.state.params;
     const metadata = JSON.parse(layer.metadata);
     this.setState({ loading: true });
@@ -505,6 +535,7 @@ export default class LayerDetails extends Component {
     newState.unSyncedFeatureCollection = unSyncedFeatureCollection;
     newState.loading = false;
     this.setState(newState, () => {
+      next();
       if (this.state.selectedFeature) {
         this.selectFeature(this.state.selectedFeature, this.state.selectedFeature.unsynced);
       }
@@ -526,41 +557,12 @@ export default class LayerDetails extends Component {
     }, 1000);
   };
 
-  deleteFeature = async () => {
-    const feature = this.state.selectedFeature;
-    let success;
-    let msg;
-    this.setState({ working: true });
-    if (feature.unsynced) {
-      success = db.deleteSubmission(feature);
-      msg = 'This submission has been deleted';
-    } else {
-      const layer = this.props.navigation.state.params.layer;
-      success = await db.deleteFeature(layer, feature);
-      msg = 'This record has been deleted';
-    }
-    this.setState({ working: false }, () => {
-      setTimeout(() => {
-        if (success) {
-          requestAnimationFrame(() => {
-            Alert.alert('Success', msg, [{ text: 'OK', onPress: this.makeAnnotations }]);
-          });
-        } else {
-          requestAnimationFrame(() => {
-            Alert.alert('Error', 'Unable to delete. Please try again later.', [{ text: 'OK' }]);
-          });
-        }
-      }, 200);
-    });
-
-    this.setState({ selectedFeature: null });
-  };
-
   componentDidMount() {
     InteractionManager.runAfterInteractions(() => {
-      this.setState({ renderPlaceholderOnly: false }, () => {
-        this.zoomToLayerBounds();
-        this.makeAnnotations();
+      this.makeAnnotations(() => {
+        this.setState({ renderPlaceholderOnly: false }, () => {
+          this.zoomToLayerBounds();
+        });
       });
     });
   }
@@ -669,7 +671,11 @@ export default class LayerDetails extends Component {
     const { layer } = this.props.navigation.state.params;
     const { adding } = this.state;
     if (this.state.renderPlaceholderOnly) {
-      return <View />;
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator />
+        </View>
+      );
     }
     return (
       <View style={styles.container}>
@@ -796,6 +802,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'stretch',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   overlay: {
     position: 'absolute',
