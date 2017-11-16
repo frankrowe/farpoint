@@ -37,8 +37,6 @@ const makeLayer = async (wfsUrl, layerName, token) => {
   if (geomType !== 'gml:PointPropertyType' && geomType !== 'gml:MultiPointPropertyType') {
     return false;
   }
-  //const featureCollection = await wfs.getAllFeatures(wfsUrl, layerName, token);
-  //const features = featureCollection.features.map(f => ({ id: f.id, geojson: JSON.stringify(f) }));
 
   const metadata = {
     layer_key: json.name,

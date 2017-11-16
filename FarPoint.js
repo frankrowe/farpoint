@@ -16,7 +16,6 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import MapboxGL from '@mapbox/react-native-mapbox-gl';
 import LayerList from './LayerList';
 import WFSList from './WFSList';
-import FButton from './FButton';
 import { getFeatureType } from './wfs';
 import * as db from './db';
 import { orange, gray, darkGray } from './styles';

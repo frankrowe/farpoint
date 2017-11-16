@@ -338,10 +338,6 @@ export const postTransaction = async (wfs, layer, point, operation = 'insert') =
       'Content-Type': 'text/xml',
     };
     const wfsUrl = wfs.url + '/geoserver/ows';
-    if (wfs.user && wfs.password) {
-      //headers['Authorization'] = 'Basic ' + base64.encode(wfs.user + ':' + wfs.password);
-      // Bearer: token
-    }
     const token = JSON.parse(wfs.token);
     if (token && token.access_token) {
       wfsUrl += `?access_token=${token.access_token}`;
