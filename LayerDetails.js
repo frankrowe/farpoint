@@ -253,8 +253,8 @@ export default class LayerDetails extends Component {
   onPressDelete = () => {
     if (this.state.selectedFeature.unsynced) {
       Alert.alert(
-        'Delete Submission?',
-        'This will delete this submission from your device.',
+        'Delete Change?',
+        'This will delete this change from your device.',
         [
           { text: 'Delete', onPress: this.deleteFeature },
           { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
@@ -263,8 +263,8 @@ export default class LayerDetails extends Component {
       );
     } else {
       Alert.alert(
-        'Delete Record?',
-        'This will delete this record from your device and from Exchange.',
+        'Delete Feature?',
+        'This will delete this feature from your device and from Exchange.',
         [
           { text: 'Delete', onPress: this.deleteFeature },
           { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
@@ -467,31 +467,40 @@ export default class LayerDetails extends Component {
 
   deleteFeature = async () => {
     const feature = this.state.selectedFeature;
-    let success;
+    let insertSuccess;
     let msg;
     this.setState({ working: true });
     if (feature.unsynced) {
-      success = db.deleteSubmission(feature);
-      msg = 'This submission has been deleted';
+      insertSuccess = db.deleteSubmission(feature);
+      msg = 'This change has been deleted';
     } else {
       const layer = this.props.navigation.state.params.layer;
-      success = await db.deleteFeature(layer, feature);
-      msg = 'This record has been deleted';
+      const operation = 'delete';
+      const submission = db.save(layer, feature, operation);
+      if (submission) {
+        insertSuccess = await db.insert(submission);
+      } else {
+        insertSuccess = false;
+      }
     }
     this.setState({ working: false }, () => {
       setTimeout(() => {
-        if (success) {
+        if (insertSuccess) {
+          msg = 'This feature has been deleted';
           requestAnimationFrame(() => {
             Alert.alert('Success', msg, [{ text: 'OK', onPress: this.makeAnnotations }]);
           });
         } else {
           requestAnimationFrame(() => {
-            Alert.alert('Error', 'Unable to delete. Please try again later.', [{ text: 'OK' }]);
+            Alert.alert(
+              'Saved',
+              "This change was unable to be synced. It's been saved, and you can attempt to sync at a later time.",
+              [{ text: 'OK' }]
+            );
           });
         }
       }, 200);
     });
-
     this.setState({ selectedFeature: null });
   };
 
@@ -521,12 +530,15 @@ export default class LayerDetails extends Component {
       }
     }
 
-    const unSyncedFeatures = layer.submissions.filter(s => !s.insert_success).map(s => {
-      const f = JSON.parse(s.point);
-      f.id = s.id;
-      f.type = 'Feature';
-      return f;
-    });
+    const unSyncedFeatures = layer.submissions
+      .filter(s => !s.insert_success) //don't show synced changes
+      .filter(s => s.operation !== 'delete') //don't show deletes on map
+      .map(s => {
+        const f = JSON.parse(s.point);
+        f.id = s.id;
+        f.type = 'Feature';
+        return f;
+      });
 
     const unSyncedFeatureCollection = {
       type: 'FeatureCollection',
@@ -732,7 +744,7 @@ export default class LayerDetails extends Component {
               </View>
               <View style={styles.topOverlay} pointerEvents="box-none">
                 <View style={styles.mapOverlay}>
-                  <Text>Move map to adjust location of this record.</Text>
+                  <Text>Move map to adjust location of this feature.</Text>
                 </View>
               </View>
             </View>
@@ -744,7 +756,7 @@ export default class LayerDetails extends Component {
               </View>
               <View style={styles.topOverlay} pointerEvents="box-none">
                 <View style={styles.mapOverlay}>
-                  <Text>Move map to adjust location of the new record.</Text>
+                  <Text>Move map to adjust location of the new feature.</Text>
                 </View>
               </View>
             </View>

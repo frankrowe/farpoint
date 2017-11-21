@@ -416,22 +416,6 @@ export const deleteSubmission = point => {
   }
 };
 
-export const deleteFeature = async (layer, point) => {
-  const _wfs = layer.wfs[0];
-  let success = await wfs.postTransaction(_wfs, layer, point, 'delete');
-  if (success && layer.features.length) {
-    success = deleteFeatureCache(layer, point);
-  }
-  return success;
-};
-
-export const deleteFeatureCache = (layer, point) => {
-  realm.write(() => {
-    layer.features = layer.features.filter(f => f.id !== point.id);
-  });
-  return true;
-};
-
 export const updateFeatureCache = (submission, featureId) => {
   const layer = submission.layer[0];
   const wfs = layer.wfs[0];
@@ -456,6 +440,8 @@ export const updateFeatureCache = (submission, featureId) => {
         }
         return f;
       });
+    } else if (submission.operation === 'delete') {
+      layer.features = layer.features.filter(f => f.id !== feature.id);
     }
   });
   return true;
